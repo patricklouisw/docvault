@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 
+import 'package:docvault/core/widgets/dev_menu_screen.dart';
 import 'package:docvault/features/splash/presentation/splash_screen.dart';
 import 'package:docvault/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:docvault/features/auth/presentation/login_or_signup_screen.dart';
@@ -20,6 +21,7 @@ import 'package:docvault/features/home/presentation/templates_placeholder_screen
 class AppRoutes {
   AppRoutes._();
 
+  static const devMenu = '/dev';
   static const splash = '/';
   static const onboarding = '/onboarding';
   static const loginOrSignup = '/login-or-signup';
@@ -28,8 +30,7 @@ class AppRoutes {
   static const signIn = '/sign-in';
   static const forgotPasswordEmail = '/forgot-password/email';
   static const forgotPasswordOtp = '/forgot-password/otp';
-  static const forgotPasswordNewPassword =
-      '/forgot-password/new-password';
+  static const forgotPasswordNewPassword = '/forgot-password/new-password';
   static const vaultSetup = '/vault/setup';
   static const recoveryPhrase = '/vault/recovery-phrase';
   static const vaultUnlock = '/vault/unlock';
@@ -40,8 +41,13 @@ class AppRoutes {
 }
 
 final appRouter = GoRouter(
-  initialLocation: AppRoutes.splash,
+  initialLocation:
+      AppRoutes.devMenu, // Change to AppRoutes.splash for production
   routes: [
+    GoRoute(
+      path: AppRoutes.devMenu,
+      builder: (context, state) => const DevMenuScreen(),
+    ),
     GoRoute(
       path: AppRoutes.splash,
       builder: (context, state) => const SplashScreen(),
@@ -68,18 +74,15 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.forgotPasswordEmail,
-      builder: (context, state) =>
-          const ForgotPasswordEmailScreen(),
+      builder: (context, state) => const ForgotPasswordEmailScreen(),
     ),
     GoRoute(
       path: AppRoutes.forgotPasswordOtp,
-      builder: (context, state) =>
-          const ForgotPasswordOtpScreen(),
+      builder: (context, state) => const ForgotPasswordOtpScreen(),
     ),
     GoRoute(
       path: AppRoutes.forgotPasswordNewPassword,
-      builder: (context, state) =>
-          const ForgotPasswordNewPasswordScreen(),
+      builder: (context, state) => const ForgotPasswordNewPasswordScreen(),
     ),
     GoRoute(
       path: AppRoutes.vaultSetup,
@@ -94,23 +97,19 @@ final appRouter = GoRouter(
       builder: (context, state) => const VaultUnlockScreen(),
     ),
     ShellRoute(
-      builder: (context, state, child) =>
-          HomeShellScreen(child: child),
+      builder: (context, state, child) => HomeShellScreen(child: child),
       routes: [
         GoRoute(
           path: AppRoutes.documents,
-          builder: (context, state) =>
-              const DocumentsPlaceholderScreen(),
+          builder: (context, state) => const DocumentsPlaceholderScreen(),
         ),
         GoRoute(
           path: AppRoutes.packages,
-          builder: (context, state) =>
-              const PackagesPlaceholderScreen(),
+          builder: (context, state) => const PackagesPlaceholderScreen(),
         ),
         GoRoute(
           path: AppRoutes.templates,
-          builder: (context, state) =>
-              const TemplatesPlaceholderScreen(),
+          builder: (context, state) => const TemplatesPlaceholderScreen(),
         ),
       ],
     ),

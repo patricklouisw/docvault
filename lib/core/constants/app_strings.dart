@@ -36,23 +36,32 @@ class AppStrings {
 
   // Sign Up
   static const completeYourProfile = 'Complete your profile';
+  static const profileSubtitle =
+      "Don't worry, only you can see your personal "
+      'data. No one else will be able to see it.';
   static const fullName = 'Full Name';
   static const phoneNumber = 'Phone Number';
   static const gender = 'Gender';
   static const dateOfBirth = 'Date of Birth';
   static const continueText = 'Continue';
   static const createAnAccount = 'Create an account';
+  static const accountSubtitle =
+      'Enter your email & password. If you forget it, '
+      'then you have to do forgot password.';
   static const email = 'Email';
   static const password = 'Password';
   static const confirmPassword = 'Confirm Password';
   static const rememberMe = 'Remember me';
   static const finish = 'Finish';
   static const signUpSuccessful = 'Sign Up Successful!';
+  static const accountCreated = 'Your account has been created.';
   static const goToHome = 'Go to Home';
 
   // Sign In
   static const helloThere = 'Hello there';
-  static const forgotPassword = 'Forgot Password?';
+  static const signInSubtitle =
+      'Please enter your email & password to sign in.';
+  static const forgotPassword = 'Forgot Password';
   static const orContinueWith = 'or continue with';
   static const signIn = 'Sign In';
   static const alreadyHaveAccount = 'Already have an account? ';
@@ -60,20 +69,22 @@ class AppStrings {
   // Forgot Password
   static const forgotPasswordTitle = 'Forgot password';
   static const enterYourEmail =
-      'Enter your email address and we will send you '
-      'a verification code.';
+      'Enter your email address. We will send an OTP '
+      'code for verification in the next step.';
   static const youveGotMail = "You've got mail";
   static const otpSubtitle =
       'We have sent the OTP verification code to your '
       'email address. Check your email and enter the '
       'code below.';
+  static const didntReceiveEmail = "Didn't receive email?";
+  static const resendIn = 'You can resend code in ';
   static const confirm = 'Confirm';
   static const didntReceiveCode = "Didn't receive code? ";
   static const resendCode = 'Resend code';
   static const createNewPassword = 'Create new password';
   static const newPasswordSubtitle =
-      'Your new password must be different from '
-      'previously used passwords.';
+      'Enter your new password. If you forget it, then '
+      'you have to do forgot password.';
   static const resetPasswordSuccessful = 'Reset Password Successful!';
 
   // Vault Setup
