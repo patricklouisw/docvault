@@ -14,8 +14,7 @@ class DevMenu extends StatelessWidget {
     ]),
     _Section('Auth', [
       _PageEntry('Login or Sign Up', AppRoutes.loginOrSignup),
-      _PageEntry('Sign Up Step 1 (Profile)', AppRoutes.signUpStep1),
-      _PageEntry('Sign Up Step 2 (Account)', AppRoutes.signUpStep2),
+      _PageEntry('Sign Up', AppRoutes.signUp),
       _PageEntry('Sign In', AppRoutes.signIn),
       _PageEntry(
         'Forgot Password - Email',

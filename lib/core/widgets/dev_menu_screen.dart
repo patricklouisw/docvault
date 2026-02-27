@@ -23,14 +23,9 @@ class DevMenuScreen extends StatelessWidget {
         Icons.login,
       ),
       _PageEntry(
-        'Sign Up Step 1 (Profile)',
-        AppRoutes.signUpStep1,
+        'Sign Up',
+        AppRoutes.signUp,
         Icons.person_add,
-      ),
-      _PageEntry(
-        'Sign Up Step 2 (Account)',
-        AppRoutes.signUpStep2,
-        Icons.email,
       ),
       _PageEntry(
         'Sign In',

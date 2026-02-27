@@ -121,7 +121,7 @@ class LoginOrSignupScreen extends StatelessWidget {
                   ),
                   GestureDetector(
                     onTap: () =>
-                        context.push(AppRoutes.signUpStep1),
+                        context.push(AppRoutes.signUp),
                     child: Text(
                       AppStrings.signUp,
                       style: textTheme.bodyMedium?.copyWith(

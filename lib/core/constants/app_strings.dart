@@ -9,6 +9,7 @@ class AppStrings {
 
   // Onboarding
   static const onboardingSkip = 'Skip';
+  static const onboardingBack = 'Back';
   static const onboardingNext = 'Next';
   static const onboardingGetStarted = 'Get Started';
   static const onboardingTitle1 = 'Secure Document Storage';
@@ -107,8 +108,7 @@ class AppStrings {
   static const copyToClipboard = 'Copy to Clipboard';
   static const recoveryWarning =
       'We cannot recover this for you. Store it safely.';
-  static const iHaveSavedMyRecoveryPhrase =
-      'I have saved my recovery phrase';
+  static const iHaveSavedMyRecoveryPhrase = 'I have saved my recovery phrase';
 
   // Vault Unlock
   static const unlockYourVault = 'Unlock Your Vault';
@@ -117,8 +117,7 @@ class AppStrings {
       'encrypted documents.';
   static const enterPassphrase = 'Enter Passphrase';
   static const unlock = 'Unlock';
-  static const useRecoveryPhraseInstead =
-      'Use recovery phrase instead';
+  static const useRecoveryPhraseInstead = 'Use recovery phrase instead';
   static const incorrectPassphrase = 'Incorrect passphrase';
   static const incorrectRecoveryPhrase = 'Incorrect recovery phrase';
 
@@ -131,13 +130,10 @@ class AppStrings {
   // Validation
   static const fieldRequired = 'This field is required';
   static const invalidEmail = 'Please enter a valid email';
-  static const passwordTooShort =
-      'Password must be at least 8 characters';
+  static const passwordTooShort = 'Password must be at least 8 characters';
   static const passwordsDoNotMatch = 'Passwords do not match';
-  static const invalidPhoneNumber =
-      'Please enter a valid phone number';
-  static const passphraseTooShort =
-      'Passphrase must be at least 8 characters';
+  static const invalidPhoneNumber = 'Please enter a valid phone number';
+  static const passphraseTooShort = 'Passphrase must be at least 8 characters';
   static const passphrasesDoNotMatch = 'Passphrases do not match';
 
   // Gender options

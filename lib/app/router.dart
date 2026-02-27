@@ -4,8 +4,7 @@ import 'package:docvault/core/widgets/dev_menu_screen.dart';
 import 'package:docvault/features/splash/presentation/splash_screen.dart';
 import 'package:docvault/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:docvault/features/auth/presentation/login_or_signup_screen.dart';
-import 'package:docvault/features/auth/presentation/sign_up_step1_screen.dart';
-import 'package:docvault/features/auth/presentation/sign_up_step2_screen.dart';
+import 'package:docvault/features/auth/presentation/sign_up_screen.dart';
 import 'package:docvault/features/auth/presentation/sign_in_screen.dart';
 import 'package:docvault/features/auth/presentation/forgot_password_email_screen.dart';
 import 'package:docvault/features/auth/presentation/forgot_password_otp_screen.dart';
@@ -25,8 +24,7 @@ class AppRoutes {
   static const splash = '/';
   static const onboarding = '/onboarding';
   static const loginOrSignup = '/login-or-signup';
-  static const signUpStep1 = '/sign-up/step1';
-  static const signUpStep2 = '/sign-up/step2';
+  static const signUp = '/sign-up';
   static const signIn = '/sign-in';
   static const forgotPasswordEmail = '/forgot-password/email';
   static const forgotPasswordOtp = '/forgot-password/otp';
@@ -63,14 +61,9 @@ final appRouter = GoRouter(
           const LoginOrSignupScreen(),
     ),
     GoRoute(
-      path: AppRoutes.signUpStep1,
+      path: AppRoutes.signUp,
       builder: (context, state) =>
-          const SignUpStep1Screen(),
-    ),
-    GoRoute(
-      path: AppRoutes.signUpStep2,
-      builder: (context, state) =>
-          const SignUpStep2Screen(),
+          const SignUpScreen(),
     ),
     GoRoute(
       path: AppRoutes.signIn,
