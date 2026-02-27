@@ -30,7 +30,8 @@ class AppRoutes {
   static const signIn = '/sign-in';
   static const forgotPasswordEmail = '/forgot-password/email';
   static const forgotPasswordOtp = '/forgot-password/otp';
-  static const forgotPasswordNewPassword = '/forgot-password/new-password';
+  static const forgotPasswordNewPassword =
+      '/forgot-password/new-password';
   static const vaultSetup = '/vault/setup';
   static const recoveryPhrase = '/vault/recovery-phrase';
   static const vaultUnlock = '/vault/unlock';
@@ -58,15 +59,18 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.loginOrSignup,
-      builder: (context, state) => const LoginOrSignupScreen(),
+      builder: (context, state) =>
+          const LoginOrSignupScreen(),
     ),
     GoRoute(
       path: AppRoutes.signUpStep1,
-      builder: (context, state) => const SignUpStep1Screen(),
+      builder: (context, state) =>
+          const SignUpStep1Screen(),
     ),
     GoRoute(
       path: AppRoutes.signUpStep2,
-      builder: (context, state) => const SignUpStep2Screen(),
+      builder: (context, state) =>
+          const SignUpStep2Screen(),
     ),
     GoRoute(
       path: AppRoutes.signIn,
@@ -74,42 +78,58 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.forgotPasswordEmail,
-      builder: (context, state) => const ForgotPasswordEmailScreen(),
+      builder: (context, state) =>
+          const ForgotPasswordEmailScreen(),
     ),
     GoRoute(
       path: AppRoutes.forgotPasswordOtp,
-      builder: (context, state) => const ForgotPasswordOtpScreen(),
+      builder: (context, state) =>
+          const ForgotPasswordOtpScreen(),
     ),
     GoRoute(
       path: AppRoutes.forgotPasswordNewPassword,
-      builder: (context, state) => const ForgotPasswordNewPasswordScreen(),
+      builder: (context, state) =>
+          const ForgotPasswordNewPasswordScreen(),
     ),
     GoRoute(
       path: AppRoutes.vaultSetup,
-      builder: (context, state) => const VaultSetupScreen(),
+      builder: (context, state) =>
+          const VaultSetupScreen(),
     ),
     GoRoute(
       path: AppRoutes.recoveryPhrase,
-      builder: (context, state) => const RecoveryPhraseScreen(),
+      builder: (context, state) =>
+          const RecoveryPhraseScreen(),
     ),
     GoRoute(
       path: AppRoutes.vaultUnlock,
-      builder: (context, state) => const VaultUnlockScreen(),
+      builder: (context, state) =>
+          const VaultUnlockScreen(),
     ),
     ShellRoute(
-      builder: (context, state, child) => HomeShellScreen(child: child),
+      builder: (context, state, child) =>
+          HomeShellScreen(child: child),
       routes: [
         GoRoute(
           path: AppRoutes.documents,
-          builder: (context, state) => const DocumentsPlaceholderScreen(),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(
+            child: DocumentsPlaceholderScreen(),
+          ),
         ),
         GoRoute(
           path: AppRoutes.packages,
-          builder: (context, state) => const PackagesPlaceholderScreen(),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(
+            child: PackagesPlaceholderScreen(),
+          ),
         ),
         GoRoute(
           path: AppRoutes.templates,
-          builder: (context, state) => const TemplatesPlaceholderScreen(),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(
+            child: TemplatesPlaceholderScreen(),
+          ),
         ),
       ],
     ),
