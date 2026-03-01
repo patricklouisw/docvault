@@ -117,8 +117,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
           },
         ),
         title: ProgressBar(
-          currentStep: _currentStep + 1,
-          totalSteps: 4,
+          currentStep: _currentStep - widget.initialStep + 1,
+          totalSteps: widget.initialStep == 0 ? 4 : 2,
         ),
       ),
       body: PageView(

@@ -30,10 +30,15 @@ class _ForgotPasswordNewPasswordScreenState
         context,
         icon: Icons.check_circle,
         title: AppStrings.resetPasswordSuccessful,
-        buttonLabel: AppStrings.goToHome,
+        buttonLabel: '',
         onButtonPressed: () {
-          Navigator.of(context).pop(); // close dialog
-          context.go(AppRoutes.signIn);
+          Navigator.of(context).pop();
+          context.go(AppRoutes.loginOrSignup);
+        },
+        autoRedirectDelay: const Duration(milliseconds: 1000),
+        onAutoRedirect: () {
+          Navigator.of(context).pop();
+          context.go(AppRoutes.loginOrSignup);
         },
       );
     }
@@ -59,9 +64,7 @@ class _ForgotPasswordNewPasswordScreenState
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
         child: Form(
           key: _formKey,
           child: Column(
@@ -92,29 +95,9 @@ class _ForgotPasswordNewPasswordScreenState
                 label: AppStrings.confirmPassword,
                 controller: _confirmPasswordController,
                 validator: (value) =>
-                    Validators.confirmPassword(
-                  value,
-                  _passwordController.text,
-                ),
+                    Validators.confirmPassword(value, _passwordController.text),
               ),
               const SizedBox(height: AppSpacing.md),
-              // Remember me
-              Row(
-                children: [
-                  Checkbox(
-                    value: _rememberMe,
-                    onChanged: (value) {
-                      setState(
-                        () => _rememberMe = value ?? false,
-                      );
-                    },
-                  ),
-                  Text(
-                    AppStrings.rememberMe,
-                    style: textTheme.bodyMedium,
-                  ),
-                ],
-              ),
               const Spacer(),
               PrimaryButton(
                 label: AppStrings.continueText,
