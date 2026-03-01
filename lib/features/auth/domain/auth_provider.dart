@@ -1,4 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:docvault/features/auth/data/auth_repository.dart';
 
 class SignUpFormData {
   SignUpFormData({
@@ -77,4 +80,18 @@ class SignUpFormNotifier extends StateNotifier<SignUpFormData> {
 final signUpFormProvider =
     StateNotifierProvider<SignUpFormNotifier, SignUpFormData>(
   (ref) => SignUpFormNotifier(),
+);
+
+// --- Auth Repository & State Providers ---
+
+final authRepositoryProvider = Provider<AuthRepository>(
+  (ref) => AuthRepository(),
+);
+
+final authStateProvider = StreamProvider<User?>(
+  (ref) => ref.watch(authRepositoryProvider).authStateChanges(),
+);
+
+final currentUserProvider = Provider<User?>(
+  (ref) => ref.watch(authStateProvider).valueOrNull,
 );
