@@ -22,7 +22,6 @@ class _ForgotPasswordNewPasswordScreenState
   final _formKey = GlobalKey<FormState>();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  bool _rememberMe = true;
 
   void _onContinue() {
     if (_formKey.currentState?.validate() ?? false) {
