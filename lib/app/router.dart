@@ -1,6 +1,9 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:docvault/core/widgets/dev_menu_screen.dart';
+import 'package:docvault/features/auth/domain/auth_provider.dart';
 import 'package:docvault/features/splash/presentation/splash_screen.dart';
 import 'package:docvault/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:docvault/features/auth/presentation/login_or_signup_screen.dart';
@@ -37,92 +40,134 @@ class AppRoutes {
   static const templates = '/home/templates';
 }
 
-final appRouter = GoRouter(
-  initialLocation:
-      AppRoutes.devMenu, // Change to AppRoutes.splash for production
-  routes: [
-    GoRoute(
-      path: AppRoutes.devMenu,
-      builder: (context, state) => const DevMenuScreen(),
-    ),
-    GoRoute(
-      path: AppRoutes.splash,
-      builder: (context, state) => const SplashScreen(),
-    ),
-    GoRoute(
-      path: AppRoutes.onboarding,
-      builder: (context, state) => const OnboardingScreen(),
-    ),
-    GoRoute(
-      path: AppRoutes.loginOrSignup,
-      builder: (context, state) =>
-          const LoginOrSignupScreen(),
-    ),
-    GoRoute(
-      path: AppRoutes.signUpMethod,
-      builder: (context, state) =>
-          const SignUpMethodScreen(),
-    ),
-    GoRoute(
-      path: AppRoutes.signUp,
-      builder: (context, state) => SignUpScreen(
-        initialStep: (state.extra as int?) ?? 0,
+/// Routes that don't require authentication.
+const _publicRoutes = {
+  AppRoutes.splash,
+  AppRoutes.onboarding,
+  AppRoutes.loginOrSignup,
+  AppRoutes.signUpMethod,
+  AppRoutes.signUp,
+  AppRoutes.signIn,
+  AppRoutes.forgotPasswordEmail,
+  AppRoutes.forgotPasswordOtp,
+  AppRoutes.forgotPasswordNewPassword,
+  AppRoutes.devMenu,
+};
+
+final appRouterProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authStateProvider);
+
+  return GoRouter(
+    initialLocation: AppRoutes.splash,
+    redirect: (context, state) {
+      final isLoggedIn = authState.valueOrNull != null;
+      final currentPath = state.matchedLocation;
+
+      // Never redirect away from splash — it handles its own navigation.
+      if (currentPath == AppRoutes.splash) return null;
+
+      // Authenticated user trying to visit login/signup screens
+      // → send them to vault unlock.
+      if (isLoggedIn && _publicRoutes.contains(currentPath)) {
+        // Allow dev menu even when logged in.
+        if (currentPath == AppRoutes.devMenu) return null;
+        return AppRoutes.vaultUnlock;
+      }
+
+      // Unauthenticated user trying to visit protected routes
+      // → send them to login.
+      if (!isLoggedIn && !_publicRoutes.contains(currentPath)) {
+        return AppRoutes.loginOrSignup;
+      }
+
+      return null;
+    },
+    routes: [
+      if (kDebugMode)
+        GoRoute(
+          path: AppRoutes.devMenu,
+          builder: (context, state) => const DevMenuScreen(),
+        ),
+      GoRoute(
+        path: AppRoutes.splash,
+        builder: (context, state) => const SplashScreen(),
       ),
-    ),
-    GoRoute(
-      path: AppRoutes.signIn,
-      builder: (context, state) => const SignInScreen(),
-    ),
-    GoRoute(
-      path: AppRoutes.forgotPasswordEmail,
-      builder: (context, state) =>
-          const ForgotPasswordEmailScreen(),
-    ),
-    GoRoute(
-      path: AppRoutes.forgotPasswordOtp,
-      builder: (context, state) =>
-          const ForgotPasswordOtpScreen(),
-    ),
-    GoRoute(
-      path: AppRoutes.forgotPasswordNewPassword,
-      builder: (context, state) =>
-          const ForgotPasswordNewPasswordScreen(),
-    ),
-    GoRoute(
-      path: AppRoutes.vaultUnlock,
-      builder: (context, state) =>
-          const VaultUnlockScreen(),
-    ),
-    ShellRoute(
-      builder: (context, state, child) =>
-          HomeShellScreen(child: child),
-      routes: [
-        GoRoute(
-          path: AppRoutes.documents,
-          pageBuilder: (context, state) =>
-              const NoTransitionPage(
-            child: DocumentsPlaceholderScreen(),
-          ),
+      GoRoute(
+        path: AppRoutes.onboarding,
+        builder: (context, state) =>
+            const OnboardingScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.loginOrSignup,
+        builder: (context, state) =>
+            const LoginOrSignupScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.signUpMethod,
+        builder: (context, state) =>
+            const SignUpMethodScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.signUp,
+        builder: (context, state) => SignUpScreen(
+          initialStep: (state.extra as int?) ?? 0,
         ),
-        GoRoute(
-          path: AppRoutes.packages,
-          pageBuilder: (context, state) =>
-              const NoTransitionPage(
-            child: PackagesPlaceholderScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.signIn,
+        builder: (context, state) => const SignInScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.forgotPasswordEmail,
+        builder: (context, state) =>
+            const ForgotPasswordEmailScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.forgotPasswordOtp,
+        builder: (context, state) =>
+            const ForgotPasswordOtpScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.forgotPasswordNewPassword,
+        builder: (context, state) =>
+            const ForgotPasswordNewPasswordScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.vaultUnlock,
+        builder: (context, state) =>
+            const VaultUnlockScreen(),
+      ),
+      ShellRoute(
+        builder: (context, state, child) =>
+            HomeShellScreen(child: child),
+        routes: [
+          GoRoute(
+            path: AppRoutes.documents,
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(
+              child: DocumentsPlaceholderScreen(),
+            ),
           ),
-        ),
-        GoRoute(
-          path: AppRoutes.templates,
-          pageBuilder: (context, state) =>
-              const NoTransitionPage(
-            child: TemplatesPlaceholderScreen(),
+          GoRoute(
+            path: AppRoutes.packages,
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(
+              child: PackagesPlaceholderScreen(),
+            ),
           ),
-        ),
-      ],
-    ),
-    GoRoute(
-      path: AppRoutes.home,
-      redirect: (context, state) => AppRoutes.documents,
-    ),
-  ],
-);
+          GoRoute(
+            path: AppRoutes.templates,
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(
+              child: TemplatesPlaceholderScreen(),
+            ),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: AppRoutes.home,
+        redirect: (context, state) => AppRoutes.documents,
+      ),
+    ],
+  );
+});
