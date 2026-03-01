@@ -93,10 +93,17 @@ Email, password, phone, passphrase match validators.
 - [x] ### 3.1 Login or Sign Up — `lib/features/auth/presentation/login_or_signup_screen.dart`
 - Illustration placeholder at top
 - "Let's you in" title
-- 3 full-width `SocialButton`s: Google, Facebook, Apple — navigate to sign-up step 3 (vault setup) via `extra: 2`
+- 3 full-width `SocialButton`s: Google, Facebook, Apple — social sign-in, navigate to vault unlock on success
 - "or" divider row
 - "Sign in with password" `PrimaryButton` → sign-in screen
-- "Don't have an account? Sign up" link → sign-up step 1
+- "Don't have an account? Sign up" link → sign-up method screen
+
+- [x] ### 3.1.1 Sign Up Method Screen — `lib/features/auth/presentation/sign_up_method_screen.dart`
+- Back arrow → pop to login screen
+- "Sign up to DocuVault" title, subtitle
+- 3 full-width `SocialButton`s: Google, Facebook, Apple — navigate to sign-up step 3 (vault setup) via `extra: 2` (2-step flow)
+- "or" divider row
+- "Sign up with email" `PrimaryButton` → sign-up step 1 (full 4-step flow)
 
 - [x] ### 3.2 Sign Up (4-step PageView) — `lib/features/auth/presentation/sign_up_screen.dart`
 - Single `PageView` with 4 steps, `ProgressBar(currentStep, 4)`, accepts `initialStep` param (0 for email, 2 for social)
@@ -223,7 +230,7 @@ Email, password, phone, passphrase match validators.
 2. `flutter analyze` passes with no errors
 3. `flutter test` — all widget and unit tests pass
 4. `flutter run -d chrome` / `flutter run -d macos` — app launches, full navigation flow works:
-   - Splash → Onboarding (3 pages, skip works) → Login/SignUp → Sign Up flow (2 steps + success) → Vault Setup → Recovery Phrase → Home (3 tabs)
+   - Splash → Onboarding (3 pages, skip works) → Login/SignUp → Sign Up Method → Sign Up flow (email: 4 steps, social: 2 steps) → Home (3 tabs)
    - Sign In → Vault Unlock → Home
    - Forgot Password flow (email → OTP → new password → success)
 5. After Phase 6: Firebase auth actually creates accounts and signs in

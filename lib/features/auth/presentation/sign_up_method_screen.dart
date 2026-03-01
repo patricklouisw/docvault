@@ -7,8 +7,8 @@ import 'package:docvault/core/constants/app_strings.dart';
 import 'package:docvault/core/widgets/primary_button.dart';
 import 'package:docvault/core/widgets/social_button.dart';
 
-class LoginOrSignupScreen extends StatelessWidget {
-  const LoginOrSignupScreen({super.key});
+class SignUpMethodScreen extends StatelessWidget {
+  const SignUpMethodScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -16,6 +16,12 @@ class LoginOrSignupScreen extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(
@@ -34,20 +40,28 @@ class LoginOrSignupScreen extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.auto_awesome,
+                  Icons.person_add,
                   size: 80,
                   color: colorScheme.primary,
                 ),
               ),
               const SizedBox(height: AppSpacing.xl),
               Text(
-                AppStrings.letsYouIn,
+                AppStrings.signUpMethodTitle,
                 style: textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                AppStrings.signUpMethodSubtitle,
+                style: textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: AppSpacing.xl),
-              // Social buttons
+              // Social sign-up buttons
               SocialButton(
                 label: AppStrings.continueWithGoogle,
                 icon: Icon(
@@ -56,7 +70,7 @@ class LoginOrSignupScreen extends StatelessWidget {
                   color: colorScheme.onSurface,
                 ),
                 onPressed: () =>
-                    context.push(AppRoutes.vaultUnlock),
+                    context.push(AppRoutes.signUp, extra: 2),
               ),
               const SizedBox(height: AppSpacing.md),
               SocialButton(
@@ -67,7 +81,7 @@ class LoginOrSignupScreen extends StatelessWidget {
                   color: colorScheme.primary,
                 ),
                 onPressed: () =>
-                    context.push(AppRoutes.vaultUnlock),
+                    context.push(AppRoutes.signUp, extra: 2),
               ),
               const SizedBox(height: AppSpacing.md),
               SocialButton(
@@ -78,7 +92,7 @@ class LoginOrSignupScreen extends StatelessWidget {
                   color: colorScheme.onSurface,
                 ),
                 onPressed: () =>
-                    context.push(AppRoutes.vaultUnlock),
+                    context.push(AppRoutes.signUp, extra: 2),
               ),
               const SizedBox(height: AppSpacing.lg),
               // "or" divider
@@ -109,31 +123,9 @@ class LoginOrSignupScreen extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.lg),
               PrimaryButton(
-                label: AppStrings.signInWithPassword,
+                label: AppStrings.signUpWithEmail,
                 onPressed: () =>
-                    context.push(AppRoutes.signIn),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              // "Don't have an account? Sign up"
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    AppStrings.dontHaveAccount,
-                    style: textTheme.bodyMedium,
-                  ),
-                  GestureDetector(
-                    onTap: () =>
-                        context.push(AppRoutes.signUpMethod),
-                    child: Text(
-                      AppStrings.signUp,
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
+                    context.push(AppRoutes.signUp),
               ),
               const SizedBox(height: AppSpacing.xl),
             ],

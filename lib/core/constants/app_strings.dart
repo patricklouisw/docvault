@@ -35,6 +35,12 @@ class AppStrings {
   static const dontHaveAccount = "Don't have an account? ";
   static const signUp = 'Sign up';
 
+  // Sign Up Method
+  static const signUpMethodTitle = 'Sign up to DocuVault';
+  static const signUpMethodSubtitle =
+      'Choose how you\'d like to create your account.';
+  static const signUpWithEmail = 'Sign up with email';
+
   // Sign Up
   static const completeYourProfile = 'Complete your profile';
   static const profileSubtitle =

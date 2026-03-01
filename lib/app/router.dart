@@ -5,6 +5,7 @@ import 'package:docvault/features/splash/presentation/splash_screen.dart';
 import 'package:docvault/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:docvault/features/auth/presentation/login_or_signup_screen.dart';
 import 'package:docvault/features/auth/presentation/sign_up_screen.dart';
+import 'package:docvault/features/auth/presentation/sign_up_method_screen.dart';
 import 'package:docvault/features/auth/presentation/sign_in_screen.dart';
 import 'package:docvault/features/auth/presentation/forgot_password_email_screen.dart';
 import 'package:docvault/features/auth/presentation/forgot_password_otp_screen.dart';
@@ -22,6 +23,7 @@ class AppRoutes {
   static const splash = '/';
   static const onboarding = '/onboarding';
   static const loginOrSignup = '/login-or-signup';
+  static const signUpMethod = '/sign-up-method';
   static const signUp = '/sign-up';
   static const signIn = '/sign-in';
   static const forgotPasswordEmail = '/forgot-password/email';
@@ -55,6 +57,11 @@ final appRouter = GoRouter(
       path: AppRoutes.loginOrSignup,
       builder: (context, state) =>
           const LoginOrSignupScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.signUpMethod,
+      builder: (context, state) =>
+          const SignUpMethodScreen(),
     ),
     GoRoute(
       path: AppRoutes.signUp,
