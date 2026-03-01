@@ -2,7 +2,9 @@
 
 ## Context
 
-The DocVault codebase is a blank Flutter scaffold (default counter app). We need to build the foundational app structure and implement Feature 1 (Authentication + Vault Setup + Unlock + Recovery) as described in `specs/initial-requirements.md` and `specs/Feature 1: Authentication/feature-1-requirements.md`. The approach is **UI-first**: build all screens with navigation first, then wire up Firebase and crypto logic.
+The DocVault app implements Feature 1 (Authentication + Vault Setup + Unlock + Recovery) as described in `specs/initial-requirements.md` and `specs/Feature 1: Authentication/feature-1-requirements.md`. The approach is **UI-first**: build all screens with navigation first, then wire up Firebase and crypto logic.
+
+**Current state (Phases 1–5 complete):** All UI screens are built and navigable — splash, onboarding, full auth flows (sign-up with 4-step PageView, sign-in, forgot password), vault unlock, and home shell with 3 placeholder tabs. Firebase dependencies are in `pubspec.yaml` but not initialized. No crypto logic exists yet. Only 1 basic smoke test.
 
 ---
 
@@ -142,7 +144,7 @@ Email, password, phone, passphrase match validators.
 ## Phase 4: Vault UI Screens
 
 - [x] ### 4.1 Vault Setup & Recovery Phrase — merged into `sign_up_screen.dart` steps 3 & 4 (see Phase 3.2)
-- Standalone files `vault_setup_screen.dart` and `recovery_phrase_screen.dart` kept for reference but routes removed from router
+- Standalone files `vault_setup_screen.dart` and `recovery_phrase_screen.dart` removed (per commit `aefcb6e`), routes removed from router
 
 - [x] ### 4.2 Vault Unlock — `lib/features/vault/presentation/vault_unlock_screen.dart`
 - Lock icon, "Unlock Your Vault" title
@@ -168,9 +170,12 @@ Email, password, phone, passphrase match validators.
 
 ## Phase 6: Firebase Integration
 
+> **Note:** Firebase dependencies (`firebase_core`, `firebase_auth`, `cloud_firestore`, `firebase_storage`, `google_sign_in`, `sign_in_with_apple`) are already in `pubspec.yaml` but have never been initialized or called. All auth flows are currently UI-only with placeholder navigation.
+
 - [ ] ### 6.1 Firebase project config
 - Create Firebase project, add platform apps, run `flutterfire configure`
 - Generated: `lib/firebase_options.dart`
+- *(Dependencies already in `pubspec.yaml` — no new packages needed)*
 
 - [ ] ### 6.2 Initialize Firebase in `main.dart`
 - `await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)`
@@ -181,16 +186,22 @@ Email, password, phone, passphrase match validators.
 
 - [ ] ### 6.4 Auth Providers — `lib/features/auth/domain/auth_provider.dart`
 - `authRepositoryProvider`, `authStateProvider` (StreamProvider), sign-in/up action providers
+- Extends existing `auth_provider.dart` which currently only has `SignUpFormData` / `signUpFormProvider`
 
-- [ ] ### 6.5 Router redirect logic
-- Unauthenticated → login; authenticated + no crypto → vault setup; authenticated + crypto → vault unlock; unlocked → home
+- [ ] ### 6.5 Router redirect logic & cleanup
+- Switch initial route from `/dev` (DevMenuScreen) to `/` (splash) for production
+- Remove or gate DevMenuScreen behind a debug flag
+- Implement auth guards: unauthenticated → login; authenticated + no crypto → vault setup; authenticated + crypto → vault unlock; unlocked → home
 
 - [ ] ### 6.6 Firestore user doc creation on first login
 - Create `users/{uid}` with `recentDocumentViews`, `createdAt`, `updatedAt`
 
 - [ ] ### 6.7 Wire all screen buttons to real auth calls
+- Sign-up flow: Firebase user creation happens at step 2 (account), vault crypto setup at steps 3–4 — all within the unified 4-step `sign_up_screen.dart`
+- Social sign-up: Firebase social auth at `sign_up_method_screen.dart`, then navigate to sign-up step 3 (vault setup) via `initialStep: 2`
+- Sign-in: Wire `sign_in_screen.dart` + social buttons on `login_or_signup_screen.dart`
 
-**Note on Forgot Password**: Firebase uses email links, not OTP. For MVP, simplify to email-entry + "Check your email" confirmation. Keep OTP screen UI for future custom implementation.
+**Note on Forgot Password**: Firebase uses email links, not OTP. For MVP, simplify to email-entry + "Check your email" confirmation. Keep OTP screen UI (`forgot_password_otp_screen.dart`) for future custom implementation.
 
 ---
 
@@ -207,6 +218,8 @@ Email, password, phone, passphrase match validators.
 - `VaultNotifier` with setup/unlock/lock/clear methods
 
 - [ ] ### 7.4 Wire vault screens to crypto providers
+- Sign-up steps 3–4: Wire `sign_up_vault_setup_step.dart` and `sign_up_recovery_phrase_step.dart` to real crypto (replace hardcoded placeholder phrase and min-8-char validation)
+- Vault unlock: Wire `vault_unlock_screen.dart` (currently has placeholder comment `// Placeholder — will be wired to crypto service`)
 
 - [ ] ### 7.5 Logout flow
 - Clear MK from memory → `FirebaseAuth.signOut()` → redirect to login
@@ -238,7 +251,7 @@ Email, password, phone, passphrase match validators.
 
 ---
 
-## Estimated file count
-- **~50 new Dart files** created
-- **2 files modified** (`pubspec.yaml`, `main.dart`)
-- **1 file deleted** (default `test/widget_test.dart` replaced)
+## Estimated remaining file count (Phases 6–8)
+- **~15–20 new Dart files** to create (auth repository, auth providers, crypto service, vault repository, vault providers, firebase_options, test files)
+- **~5–8 files modified** (`main.dart`, `router.dart`, `auth_provider.dart`, `sign_up_vault_setup_step.dart`, `sign_up_recovery_phrase_step.dart`, `vault_unlock_screen.dart`, sign-in/sign-up screens for wiring)
+- **1 file replaced** (`test/widget_test.dart` → proper smoke test)
