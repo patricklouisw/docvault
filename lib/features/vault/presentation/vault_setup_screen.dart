@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
-import 'package:docvault/app/router.dart';
 import 'package:docvault/core/constants/app_spacing.dart';
 import 'package:docvault/core/constants/app_strings.dart';
 import 'package:docvault/core/utils/validators.dart';
@@ -23,7 +21,8 @@ class _VaultSetupScreenState extends State<VaultSetupScreen> {
 
   void _onContinue() {
     if (_formKey.currentState?.validate() ?? false) {
-      context.go(AppRoutes.recoveryPhrase);
+      // Vault setup is now embedded in sign_up_screen.dart
+      // context.go(AppRoutes.recoveryPhrase);
     }
   }
 

@@ -28,6 +28,12 @@ class DevMenuScreen extends StatelessWidget {
         Icons.person_add,
       ),
       _PageEntry(
+        'Sign Up (Social)',
+        AppRoutes.signUp,
+        Icons.people,
+        extra: 2,
+      ),
+      _PageEntry(
         'Sign In',
         AppRoutes.signIn,
         Icons.lock_open,
@@ -49,16 +55,6 @@ class DevMenuScreen extends StatelessWidget {
       ),
     ]),
     _Section('Vault', [
-      _PageEntry(
-        'Vault Setup',
-        AppRoutes.vaultSetup,
-        Icons.shield,
-      ),
-      _PageEntry(
-        'Recovery Phrase',
-        AppRoutes.recoveryPhrase,
-        Icons.key,
-      ),
       _PageEntry(
         'Vault Unlock',
         AppRoutes.vaultUnlock,
@@ -124,10 +120,12 @@ class _Section {
 }
 
 class _PageEntry {
-  const _PageEntry(this.label, this.route, this.icon);
+  const _PageEntry(this.label, this.route, this.icon,
+      {this.extra});
   final String label;
   final String route;
   final IconData icon;
+  final Object? extra;
 }
 
 class _SectionHeader extends StatelessWidget {
@@ -177,7 +175,7 @@ class _PageTile extends StatelessWidget {
         size: 20,
         color: colorScheme.onSurfaceVariant,
       ),
-      onTap: () => context.go(entry.route),
+      onTap: () => context.go(entry.route, extra: entry.extra),
     );
   }
 }

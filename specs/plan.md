@@ -93,25 +93,19 @@ Email, password, phone, passphrase match validators.
 - [x] ### 3.1 Login or Sign Up — `lib/features/auth/presentation/login_or_signup_screen.dart`
 - Illustration placeholder at top
 - "Let's you in" title
-- 3 full-width `SocialButton`s: Google, Facebook, Apple
+- 3 full-width `SocialButton`s: Google, Facebook, Apple — navigate to sign-up step 3 (vault setup) via `extra: 2`
 - "or" divider row
 - "Sign in with password" `PrimaryButton` → sign-in screen
 - "Don't have an account? Sign up" link → sign-up step 1
 
-- [x] ### 3.2 Sign Up Step 1 (Profile) — `lib/features/auth/presentation/sign_up_screen.dart` (merged with step 2 into single PageView)
-- Back arrow, `ProgressBar(1, 2)`, "Complete your profile" + clipboard emoji
-- Circular avatar with edit overlay (opens `ImagePicker`)
-- Fields: Full Name, Phone Number, Gender dropdown, Date of Birth (date picker)
-- "Continue" → step 2
-
-- [x] ### 3.3 Sign Up Step 2 (Account) — merged into `sign_up_screen.dart`
-- `ProgressBar(2, 2)`, "Create an account" + lock emoji
-- Fields: Email, Password, Confirm Password (all with validation)
-- "Remember me" checkbox
-- "Finish" → show success dialog
-
-- [x] ### 3.4 Sign Up Success Dialog — `lib/features/auth/presentation/widgets/sign_up_success_dialog.dart`
-- Uses `SuccessDialog`: person icon, "Sign Up Successful!", "Go to Home" → vault setup
+- [x] ### 3.2 Sign Up (4-step PageView) — `lib/features/auth/presentation/sign_up_screen.dart`
+- Single `PageView` with 4 steps, `ProgressBar(currentStep, 4)`, accepts `initialStep` param (0 for email, 2 for social)
+- **Step 1 (Profile):** Back arrow, "Complete your profile" + clipboard emoji, avatar with edit overlay, Full Name, Phone, Gender dropdown, DOB picker, "Continue" → step 2
+- **Step 2 (Account):** "Create an account" + lock emoji, Email, Password, Confirm Password, "Remember me" checkbox, "Continue" → step 3
+- **Step 3 (Vault Setup):** Shield icon, "Secure Your Vault", warning card, Create passphrase + Confirm passphrase, "Continue" → step 4
+- **Step 4 (Recovery Phrase):** Key icon, "Your Recovery Phrase", bordered phrase card, "Copy to Clipboard", warning card, "I have saved my recovery phrase" checkbox, "Continue" (gated by checkbox) → home
+- Back button pops route on `initialStep`, otherwise goes to previous page
+- No success dialog — seamless flow through all steps
 
 - [x] ### 3.5 Sign In — `lib/features/auth/presentation/sign_in_screen.dart`
 - "Hello there" + wave emoji, email + password fields
@@ -140,20 +134,10 @@ Email, password, phone, passphrase match validators.
 
 ## Phase 4: Vault UI Screens
 
-- [x] ### 4.1 Vault Setup — `lib/features/vault/presentation/vault_setup_screen.dart`
-- Shield icon, "Secure Your Vault" title
-- Warning card (amber): unrecoverability notice
-- Create passphrase + confirm passphrase fields
-- "Continue" → recovery phrase screen
+- [x] ### 4.1 Vault Setup & Recovery Phrase — merged into `sign_up_screen.dart` steps 3 & 4 (see Phase 3.2)
+- Standalone files `vault_setup_screen.dart` and `recovery_phrase_screen.dart` kept for reference but routes removed from router
 
-- [x] ### 4.2 Recovery Phrase — `lib/features/vault/presentation/recovery_phrase_screen.dart`
-- Key icon, "Your Recovery Phrase" title
-- Bordered card with phrase (placeholder text for now)
-- "Copy to Clipboard" button
-- Warning card, "I have saved my recovery phrase" checkbox
-- "Continue" (disabled until checked) → home
-
-- [x] ### 4.3 Vault Unlock — `lib/features/vault/presentation/vault_unlock_screen.dart`
+- [x] ### 4.2 Vault Unlock — `lib/features/vault/presentation/vault_unlock_screen.dart`
 - Lock icon, "Unlock Your Vault" title
 - Passphrase input, "Unlock" button
 - "Use recovery phrase instead" toggle link

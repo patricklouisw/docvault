@@ -55,7 +55,8 @@ class LoginOrSignupScreen extends StatelessWidget {
                   size: 28,
                   color: colorScheme.onSurface,
                 ),
-                onPressed: () {},
+                onPressed: () =>
+                    context.push(AppRoutes.signUp, extra: 2),
               ),
               const SizedBox(height: AppSpacing.md),
               SocialButton(
@@ -65,7 +66,8 @@ class LoginOrSignupScreen extends StatelessWidget {
                   size: 24,
                   color: colorScheme.primary,
                 ),
-                onPressed: () {},
+                onPressed: () =>
+                    context.push(AppRoutes.signUp, extra: 2),
               ),
               const SizedBox(height: AppSpacing.md),
               SocialButton(
@@ -75,7 +77,8 @@ class LoginOrSignupScreen extends StatelessWidget {
                   size: 24,
                   color: colorScheme.onSurface,
                 ),
-                onPressed: () {},
+                onPressed: () =>
+                    context.push(AppRoutes.signUp, extra: 2),
               ),
               const SizedBox(height: AppSpacing.lg),
               // "or" divider

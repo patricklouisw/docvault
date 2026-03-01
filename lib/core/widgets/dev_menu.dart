@@ -15,6 +15,8 @@ class DevMenu extends StatelessWidget {
     _Section('Auth', [
       _PageEntry('Login or Sign Up', AppRoutes.loginOrSignup),
       _PageEntry('Sign Up', AppRoutes.signUp),
+      _PageEntry('Sign Up (Social)', AppRoutes.signUp,
+          extra: 2),
       _PageEntry('Sign In', AppRoutes.signIn),
       _PageEntry(
         'Forgot Password - Email',
@@ -30,8 +32,6 @@ class DevMenu extends StatelessWidget {
       ),
     ]),
     _Section('Vault', [
-      _PageEntry('Vault Setup', AppRoutes.vaultSetup),
-      _PageEntry('Recovery Phrase', AppRoutes.recoveryPhrase),
       _PageEntry('Vault Unlock', AppRoutes.vaultUnlock),
     ]),
     _Section('Home', [
@@ -100,9 +100,10 @@ class _Section {
 }
 
 class _PageEntry {
-  const _PageEntry(this.label, this.route);
+  const _PageEntry(this.label, this.route, {this.extra});
   final String label;
   final String route;
+  final Object? extra;
 }
 
 class _SectionHeader extends StatelessWidget {
@@ -151,7 +152,7 @@ class _PageTile extends StatelessWidget {
       ),
       onTap: () {
         Navigator.of(context).pop(); // close drawer
-        context.go(entry.route);
+        context.go(entry.route, extra: entry.extra);
       },
     );
   }

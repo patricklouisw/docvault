@@ -9,8 +9,6 @@ import 'package:docvault/features/auth/presentation/sign_in_screen.dart';
 import 'package:docvault/features/auth/presentation/forgot_password_email_screen.dart';
 import 'package:docvault/features/auth/presentation/forgot_password_otp_screen.dart';
 import 'package:docvault/features/auth/presentation/forgot_password_new_password_screen.dart';
-import 'package:docvault/features/vault/presentation/vault_setup_screen.dart';
-import 'package:docvault/features/vault/presentation/recovery_phrase_screen.dart';
 import 'package:docvault/features/vault/presentation/vault_unlock_screen.dart';
 import 'package:docvault/features/home/presentation/home_shell_screen.dart';
 import 'package:docvault/features/home/presentation/documents_placeholder_screen.dart';
@@ -30,8 +28,6 @@ class AppRoutes {
   static const forgotPasswordOtp = '/forgot-password/otp';
   static const forgotPasswordNewPassword =
       '/forgot-password/new-password';
-  static const vaultSetup = '/vault/setup';
-  static const recoveryPhrase = '/vault/recovery-phrase';
   static const vaultUnlock = '/vault/unlock';
   static const home = '/home';
   static const documents = '/home/documents';
@@ -62,8 +58,9 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.signUp,
-      builder: (context, state) =>
-          const SignUpScreen(),
+      builder: (context, state) => SignUpScreen(
+        initialStep: (state.extra as int?) ?? 0,
+      ),
     ),
     GoRoute(
       path: AppRoutes.signIn,
@@ -83,16 +80,6 @@ final appRouter = GoRouter(
       path: AppRoutes.forgotPasswordNewPassword,
       builder: (context, state) =>
           const ForgotPasswordNewPasswordScreen(),
-    ),
-    GoRoute(
-      path: AppRoutes.vaultSetup,
-      builder: (context, state) =>
-          const VaultSetupScreen(),
-    ),
-    GoRoute(
-      path: AppRoutes.recoveryPhrase,
-      builder: (context, state) =>
-          const RecoveryPhraseScreen(),
     ),
     GoRoute(
       path: AppRoutes.vaultUnlock,
