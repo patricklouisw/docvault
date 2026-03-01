@@ -11,11 +11,13 @@ class SignUpRecoveryPhraseStep extends StatelessWidget {
     required this.hasSavedRecoveryPhrase,
     required this.onSavedChanged,
     required this.onContinue,
+    this.isLoading = false,
   });
 
   final bool hasSavedRecoveryPhrase;
   final ValueChanged<bool> onSavedChanged;
   final VoidCallback onContinue;
+  final bool isLoading;
 
   // Placeholder phrase — will be replaced by crypto service
   static const _placeholderPhrase =
@@ -158,7 +160,10 @@ class SignUpRecoveryPhraseStep extends StatelessWidget {
           PrimaryButton(
             label: AppStrings.continueText,
             onPressed:
-                hasSavedRecoveryPhrase ? onContinue : null,
+                hasSavedRecoveryPhrase && !isLoading
+                    ? onContinue
+                    : null,
+            isLoading: isLoading,
           ),
           const SizedBox(height: AppSpacing.lg),
         ],

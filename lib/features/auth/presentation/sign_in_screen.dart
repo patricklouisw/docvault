@@ -1,4 +1,8 @@
+import 'dart:developer';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:docvault/app/router.dart';
@@ -8,23 +12,93 @@ import 'package:docvault/core/utils/validators.dart';
 import 'package:docvault/core/widgets/password_field.dart';
 import 'package:docvault/core/widgets/primary_button.dart';
 import 'package:docvault/core/widgets/underline_text_field.dart';
+import 'package:docvault/features/auth/domain/auth_provider.dart';
 
-class SignInScreen extends StatefulWidget {
+class SignInScreen extends ConsumerStatefulWidget {
   const SignInScreen({super.key});
 
   @override
-  State<SignInScreen> createState() => _SignInScreenState();
+  ConsumerState<SignInScreen> createState() => _SignInScreenState();
 }
 
-class _SignInScreenState extends State<SignInScreen> {
+class _SignInScreenState extends ConsumerState<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _rememberMe = true;
+  bool _isLoading = false;
+  String? _errorText;
 
-  void _onSignIn() {
-    if (_formKey.currentState?.validate() ?? false) {
+  Future<void> _onSignIn() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorText = null;
+    });
+
+    try {
+      final authRepo = ref.read(authRepositoryProvider);
+      await authRepo.signInWithEmail(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      final userRepo = ref.read(userRepositoryProvider);
+      final uid = authRepo.currentUser!.uid;
+      await userRepo.createUserIfNotExists(uid);
+
+      if (!mounted) return;
       context.go(AppRoutes.vaultUnlock);
+    } on FirebaseAuthException catch (e) {
+      log('Sign in error: ${e.code}', name: 'SignInScreen');
+      setState(() => _errorText = _mapAuthError(e.code));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _onSocialSignIn(
+    Future<UserCredential> Function() signInMethod,
+  ) async {
+    setState(() {
+      _isLoading = true;
+      _errorText = null;
+    });
+
+    try {
+      await signInMethod();
+
+      final authRepo = ref.read(authRepositoryProvider);
+      final userRepo = ref.read(userRepositoryProvider);
+      final uid = authRepo.currentUser!.uid;
+      await userRepo.createUserIfNotExists(uid);
+
+      if (!mounted) return;
+      context.go(AppRoutes.vaultUnlock);
+    } on FirebaseAuthException catch (e) {
+      log('Social sign in error: ${e.code}',
+          name: 'SignInScreen');
+      setState(() => _errorText = _mapAuthError(e.code));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  String _mapAuthError(String code) {
+    switch (code) {
+      case 'user-not-found':
+      case 'wrong-password':
+      case 'invalid-credential':
+        return 'Invalid email or password.';
+      case 'user-disabled':
+        return 'This account has been disabled.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please try again later.';
+      case 'sign-in-cancelled':
+        return 'Sign-in was cancelled.';
+      default:
+        return 'Something went wrong. Please try again.';
     }
   }
 
@@ -39,6 +113,7 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final authRepo = ref.read(authRepositoryProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -83,6 +158,15 @@ class _SignInScreenState extends State<SignInScreen> {
                 controller: _passwordController,
                 validator: Validators.password,
               ),
+              if (_errorText != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  _errorText!,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colorScheme.error,
+                  ),
+                ),
+              ],
               const SizedBox(height: AppSpacing.md),
               // Remember me
               Row(
@@ -149,24 +233,28 @@ class _SignInScreenState extends State<SignInScreen> {
                 children: [
                   _SocialIconButton(
                     icon: Icons.g_mobiledata,
-                    onTap: () {},
+                    onTap: _isLoading
+                        ? null
+                        : () => _onSocialSignIn(
+                              authRepo.signInWithGoogle,
+                            ),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   _SocialIconButton(
                     icon: Icons.apple,
-                    onTap: () {},
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  _SocialIconButton(
-                    icon: Icons.facebook,
-                    onTap: () {},
+                    onTap: _isLoading
+                        ? null
+                        : () => _onSocialSignIn(
+                              authRepo.signInWithApple,
+                            ),
                   ),
                 ],
               ),
               const SizedBox(height: AppSpacing.xl),
               PrimaryButton(
                 label: AppStrings.signIn,
-                onPressed: _onSignIn,
+                onPressed: _isLoading ? null : _onSignIn,
+                isLoading: _isLoading,
               ),
               const SizedBox(height: AppSpacing.lg),
             ],
@@ -184,7 +272,7 @@ class _SocialIconButton extends StatelessWidget {
   });
 
   final IconData icon;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {

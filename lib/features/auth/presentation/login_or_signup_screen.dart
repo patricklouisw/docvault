@@ -1,4 +1,8 @@
+import 'dart:developer';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:docvault/app/router.dart';
@@ -6,14 +10,63 @@ import 'package:docvault/core/constants/app_spacing.dart';
 import 'package:docvault/core/constants/app_strings.dart';
 import 'package:docvault/core/widgets/primary_button.dart';
 import 'package:docvault/core/widgets/social_button.dart';
+import 'package:docvault/features/auth/domain/auth_provider.dart';
 
-class LoginOrSignupScreen extends StatelessWidget {
+class LoginOrSignupScreen extends ConsumerStatefulWidget {
   const LoginOrSignupScreen({super.key});
+
+  @override
+  ConsumerState<LoginOrSignupScreen> createState() =>
+      _LoginOrSignupScreenState();
+}
+
+class _LoginOrSignupScreenState
+    extends ConsumerState<LoginOrSignupScreen> {
+  bool _isLoading = false;
+
+  Future<void> _onSocialSignIn(
+    Future<UserCredential> Function() signInMethod,
+  ) async {
+    setState(() => _isLoading = true);
+
+    try {
+      await signInMethod();
+
+      final authRepo = ref.read(authRepositoryProvider);
+      final userRepo = ref.read(userRepositoryProvider);
+      final uid = authRepo.currentUser!.uid;
+      await userRepo.createUserIfNotExists(uid);
+
+      if (!mounted) return;
+      context.go(AppRoutes.vaultUnlock);
+    } on FirebaseAuthException catch (e) {
+      log('Social sign in error: ${e.code}',
+          name: 'LoginOrSignupScreen');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_mapAuthError(e.code))),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  String _mapAuthError(String code) {
+    switch (code) {
+      case 'sign-in-cancelled':
+        return 'Sign-in was cancelled.';
+      case 'account-exists-with-different-credential':
+        return 'An account already exists with a different sign-in method.';
+      default:
+        return 'Something went wrong. Please try again.';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final authRepo = ref.read(authRepositoryProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -55,19 +108,11 @@ class LoginOrSignupScreen extends StatelessWidget {
                   size: 28,
                   color: colorScheme.onSurface,
                 ),
-                onPressed: () =>
-                    context.push(AppRoutes.vaultUnlock),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              SocialButton(
-                label: AppStrings.continueWithFacebook,
-                icon: Icon(
-                  Icons.facebook,
-                  size: 24,
-                  color: colorScheme.primary,
-                ),
-                onPressed: () =>
-                    context.push(AppRoutes.vaultUnlock),
+                onPressed: _isLoading
+                    ? null
+                    : () => _onSocialSignIn(
+                          authRepo.signInWithGoogle,
+                        ),
               ),
               const SizedBox(height: AppSpacing.md),
               SocialButton(
@@ -77,8 +122,11 @@ class LoginOrSignupScreen extends StatelessWidget {
                   size: 24,
                   color: colorScheme.onSurface,
                 ),
-                onPressed: () =>
-                    context.push(AppRoutes.vaultUnlock),
+                onPressed: _isLoading
+                    ? null
+                    : () => _onSocialSignIn(
+                          authRepo.signInWithApple,
+                        ),
               ),
               const SizedBox(height: AppSpacing.lg),
               // "or" divider
@@ -110,8 +158,9 @@ class LoginOrSignupScreen extends StatelessWidget {
               const SizedBox(height: AppSpacing.lg),
               PrimaryButton(
                 label: AppStrings.signInWithPassword,
-                onPressed: () =>
-                    context.push(AppRoutes.signIn),
+                onPressed: _isLoading
+                    ? null
+                    : () => context.push(AppRoutes.signIn),
               ),
               const SizedBox(height: AppSpacing.lg),
               // "Don't have an account? Sign up"
@@ -123,8 +172,10 @@ class LoginOrSignupScreen extends StatelessWidget {
                     style: textTheme.bodyMedium,
                   ),
                   GestureDetector(
-                    onTap: () =>
-                        context.push(AppRoutes.signUpMethod),
+                    onTap: _isLoading
+                        ? null
+                        : () => context
+                            .push(AppRoutes.signUpMethod),
                     child: Text(
                       AppStrings.signUp,
                       style: textTheme.bodyMedium?.copyWith(

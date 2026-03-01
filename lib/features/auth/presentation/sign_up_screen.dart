@@ -1,23 +1,29 @@
+import 'dart:developer';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:docvault/app/router.dart';
 import 'package:docvault/core/widgets/progress_bar.dart';
+import 'package:docvault/features/auth/domain/auth_provider.dart';
 import 'package:docvault/features/auth/presentation/widgets/sign_up_profile_step.dart';
 import 'package:docvault/features/auth/presentation/widgets/sign_up_account_step.dart';
 import 'package:docvault/features/auth/presentation/widgets/sign_up_vault_setup_step.dart';
 import 'package:docvault/features/auth/presentation/widgets/sign_up_recovery_phrase_step.dart';
 
-class SignUpScreen extends StatefulWidget {
+class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key, this.initialStep = 0});
 
   final int initialStep;
 
   @override
-  State<SignUpScreen> createState() => _SignUpScreenState();
+  ConsumerState<SignUpScreen> createState() =>
+      _SignUpScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   late final PageController _pageController;
   late int _currentStep;
 
@@ -43,6 +49,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   // Step 4 state
   bool _hasSavedRecoveryPhrase = false;
+
+  bool _isLoading = false;
+  String? _errorText;
 
   @override
   void initState() {
@@ -72,9 +81,30 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  void _onStep2Continue() {
-    if (_step2FormKey.currentState?.validate() ?? false) {
+  Future<void> _onStep2Continue() async {
+    if (!(_step2FormKey.currentState?.validate() ?? false)) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorText = null;
+    });
+
+    try {
+      final authRepo = ref.read(authRepositoryProvider);
+      await authRepo.signUpWithEmail(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      if (!mounted) return;
       _nextPage();
+    } on FirebaseAuthException catch (e) {
+      log('Sign up error: ${e.code}', name: 'SignUpScreen');
+      setState(() => _errorText = _mapAuthError(e.code));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -84,8 +114,43 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  void _onStep4Continue() {
-    context.go(AppRoutes.home);
+  Future<void> _onStep4Continue() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final authRepo = ref.read(authRepositoryProvider);
+      final userRepo = ref.read(userRepositoryProvider);
+      final uid = authRepo.currentUser!.uid;
+      await userRepo.createUserIfNotExists(uid);
+
+      if (!mounted) return;
+      context.go(AppRoutes.home);
+    } on Exception catch (e) {
+      log('User doc creation error: $e',
+          name: 'SignUpScreen');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content:
+              Text('Something went wrong. Please try again.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  String _mapAuthError(String code) {
+    switch (code) {
+      case 'email-already-in-use':
+        return 'An account with this email already exists.';
+      case 'weak-password':
+        return 'Password is too weak.';
+      case 'invalid-email':
+        return 'Invalid email address.';
+      default:
+        return 'Something went wrong. Please try again.';
+    }
   }
 
   @override
@@ -117,7 +182,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
           },
         ),
         title: ProgressBar(
-          currentStep: _currentStep - widget.initialStep + 1,
+          currentStep:
+              _currentStep - widget.initialStep + 1,
           totalSteps: widget.initialStep == 0 ? 4 : 2,
         ),
       ),
@@ -150,6 +216,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
               setState(() => _rememberMe = value);
             },
             onContinue: _onStep2Continue,
+            isLoading: _isLoading,
+            errorText: _errorText,
           ),
           SignUpVaultSetupStep(
             formKey: _step3FormKey,
@@ -166,6 +234,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               );
             },
             onContinue: _onStep4Continue,
+            isLoading: _isLoading,
           ),
         ],
       ),

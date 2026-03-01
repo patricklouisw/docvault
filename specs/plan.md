@@ -199,12 +199,17 @@ Email, password, phone, passphrase match validators.
 - Creates `users/{uid}` with `recentDocumentViews`, `createdAt`, `updatedAt`
 - `userRepositoryProvider` added to `auth_provider.dart`
 
-- [ ] ### 6.7 Wire all screen buttons to real auth calls
-- Sign-up flow: Firebase user creation happens at step 2 (account), vault crypto setup at steps 3–4 — all within the unified 4-step `sign_up_screen.dart`
-- Social sign-up: Firebase social auth at `sign_up_method_screen.dart`, then navigate to sign-up step 3 (vault setup) via `initialStep: 2`
-- Sign-in: Wire `sign_in_screen.dart` + social buttons on `login_or_signup_screen.dart`
+- [x] ### 6.7 Wire all screen buttons to real auth calls
+- All screens converted from `StatelessWidget`/`StatefulWidget` to `ConsumerStatefulWidget` for Riverpod access
+- **sign_in_screen.dart**: Email/password sign-in + Google/Apple social sign-in via `authRepositoryProvider`, error display, loading state
+- **login_or_signup_screen.dart**: Google/Apple social sign-in buttons wired, Facebook removed (no Firebase support), snackbar errors
+- **sign_up_method_screen.dart**: Google/Apple social sign-up → `createUserIfNotExists()` → navigate to vault setup (step 3)
+- **sign_up_screen.dart**: Step 2 calls `signUpWithEmail()` with loading/error in `SignUpAccountStep`; Step 4 calls `createUserIfNotExists()` with loading in `SignUpRecoveryPhraseStep`
+- **sign_up_account_step.dart**: Added `isLoading` and `errorText` params
+- **sign_up_recovery_phrase_step.dart**: Added `isLoading` param
+- **forgot_password_email_screen.dart**: Calls `sendPasswordResetEmail()`, shows snackbar "Check your inbox", pops back (no OTP navigation)
 
-**Note on Forgot Password**: Firebase uses email links, not OTP. For MVP, simplify to email-entry + "Check your email" confirmation. Keep OTP screen UI (`forgot_password_otp_screen.dart`) for future custom implementation.
+**Note on Forgot Password**: Firebase uses email links, not OTP. OTP screen UI (`forgot_password_otp_screen.dart`) kept for future custom implementation but is no longer navigated to.
 
 ---
 

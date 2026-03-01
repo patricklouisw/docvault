@@ -17,6 +17,8 @@ class SignUpAccountStep extends StatelessWidget {
     required this.rememberMe,
     required this.onRememberMeChanged,
     required this.onContinue,
+    this.isLoading = false,
+    this.errorText,
   });
 
   final GlobalKey<FormState> formKey;
@@ -26,6 +28,8 @@ class SignUpAccountStep extends StatelessWidget {
   final bool rememberMe;
   final ValueChanged<bool> onRememberMeChanged;
   final VoidCallback onContinue;
+  final bool isLoading;
+  final String? errorText;
 
   @override
   Widget build(BuildContext context) {
@@ -94,6 +98,15 @@ class SignUpAccountStep extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (errorText != null) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      errorText!,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colorScheme.error,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -105,7 +118,8 @@ class SignUpAccountStep extends StatelessWidget {
             ),
             child: PrimaryButton(
               label: AppStrings.continueText,
-              onPressed: onContinue,
+              onPressed: isLoading ? null : onContinue,
+              isLoading: isLoading,
             ),
           ),
         ],
