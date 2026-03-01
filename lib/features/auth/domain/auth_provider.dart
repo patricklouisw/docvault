@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:docvault/features/auth/data/auth_repository.dart';
+import 'package:docvault/features/auth/data/user_repository.dart';
 
 class SignUpFormData {
   SignUpFormData({
@@ -94,4 +95,10 @@ final authStateProvider = StreamProvider<User?>(
 
 final currentUserProvider = Provider<User?>(
   (ref) => ref.watch(authStateProvider).valueOrNull,
+);
+
+// --- User Repository Provider ---
+
+final userRepositoryProvider = Provider<UserRepository>(
+  (ref) => UserRepository(),
 );

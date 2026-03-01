@@ -172,29 +172,32 @@ Email, password, phone, passphrase match validators.
 
 > **Note:** Firebase dependencies (`firebase_core`, `firebase_auth`, `cloud_firestore`, `firebase_storage`, `google_sign_in`, `sign_in_with_apple`) are already in `pubspec.yaml` but have never been initialized or called. All auth flows are currently UI-only with placeholder navigation.
 
-- [ ] ### 6.1 Firebase project config
-- Create Firebase project, add platform apps, run `flutterfire configure`
+- [x] ### 6.1 Firebase project config
+- Created Firebase project, ran `flutterfire configure`
 - Generated: `lib/firebase_options.dart`
-- *(Dependencies already in `pubspec.yaml` — no new packages needed)*
 
-- [ ] ### 6.2 Initialize Firebase in `main.dart`
+- [x] ### 6.2 Initialize Firebase in `main.dart`
 - `await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)`
 
-- [ ] ### 6.3 Auth Repository — `lib/features/auth/data/auth_repository.dart`
-- `signInWithGoogle()`, `signInWithApple()`, `signInWithEmail()`, `signUpWithEmail()`
-- `sendPasswordResetEmail()`, `signOut()`, `authStateChanges`, `currentUser`
+- [x] ### 6.3 Auth Repository — `lib/features/auth/data/auth_repository.dart`
+- `signInWithEmail()`, `signUpWithEmail()`, `signInWithGoogle()`, `signInWithApple()`
+- `sendPasswordResetEmail()`, `signOut()`, `authStateChanges()`, `currentUser`
 
-- [ ] ### 6.4 Auth Providers — `lib/features/auth/domain/auth_provider.dart`
-- `authRepositoryProvider`, `authStateProvider` (StreamProvider), sign-in/up action providers
-- Extends existing `auth_provider.dart` which currently only has `SignUpFormData` / `signUpFormProvider`
+- [x] ### 6.4 Auth Providers — `lib/features/auth/domain/auth_provider.dart`
+- `authRepositoryProvider`, `authStateProvider` (StreamProvider), `currentUserProvider`, `userRepositoryProvider`
+- Extends existing `auth_provider.dart` alongside `SignUpFormData` / `signUpFormProvider`
 
-- [ ] ### 6.5 Router redirect logic & cleanup
-- Switch initial route from `/dev` (DevMenuScreen) to `/` (splash) for production
-- Remove or gate DevMenuScreen behind a debug flag
-- Implement auth guards: unauthenticated → login; authenticated + no crypto → vault setup; authenticated + crypto → vault unlock; unlocked → home
+- [x] ### 6.5 Router redirect logic & cleanup
+- Converted `appRouter` to `appRouterProvider` (Riverpod-aware, reacts to `authStateProvider`)
+- Initial route switched from `/dev` to `/` (splash)
+- DevMenu gated behind `kDebugMode`
+- Auth guards: unauthenticated → login; authenticated on public routes → vault unlock
+- Splash screen checks `FirebaseAuth.instance.currentUser` and skips to vault unlock if logged in
 
-- [ ] ### 6.6 Firestore user doc creation on first login
-- Create `users/{uid}` with `recentDocumentViews`, `createdAt`, `updatedAt`
+- [x] ### 6.6 Firestore user doc creation on first login
+- `lib/features/auth/data/user_repository.dart`: `createUserIfNotExists()`, `hasVaultSetup()`, `getUserData()`
+- Creates `users/{uid}` with `recentDocumentViews`, `createdAt`, `updatedAt`
+- `userRepositoryProvider` added to `auth_provider.dart`
 
 - [ ] ### 6.7 Wire all screen buttons to real auth calls
 - Sign-up flow: Firebase user creation happens at step 2 (account), vault crypto setup at steps 3–4 — all within the unified 4-step `sign_up_screen.dart`
