@@ -8,26 +8,20 @@ import 'package:docvault/core/widgets/primary_button.dart';
 class SignUpRecoveryPhraseStep extends StatelessWidget {
   const SignUpRecoveryPhraseStep({
     super.key,
+    required this.recoveryPhrase,
     required this.hasSavedRecoveryPhrase,
     required this.onSavedChanged,
     required this.onContinue,
-    this.isLoading = false,
   });
 
+  final String recoveryPhrase;
   final bool hasSavedRecoveryPhrase;
   final ValueChanged<bool> onSavedChanged;
   final VoidCallback onContinue;
-  final bool isLoading;
-
-  // Placeholder phrase — will be replaced by crypto service
-  static const _placeholderPhrase =
-      'apple brave cherry delta echo '
-      'flame grape house ivory jungle '
-      'kite lemon';
 
   void _copyToClipboard(BuildContext context) {
     Clipboard.setData(
-      const ClipboardData(text: _placeholderPhrase),
+      ClipboardData(text: recoveryPhrase),
     );
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -91,7 +85,7 @@ class SignUpRecoveryPhraseStep extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              _placeholderPhrase,
+              recoveryPhrase,
               style: textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.w500,
                 height: 1.8,
@@ -160,10 +154,7 @@ class SignUpRecoveryPhraseStep extends StatelessWidget {
           PrimaryButton(
             label: AppStrings.continueText,
             onPressed:
-                hasSavedRecoveryPhrase && !isLoading
-                    ? onContinue
-                    : null,
-            isLoading: isLoading,
+                hasSavedRecoveryPhrase ? onContinue : null,
           ),
           const SizedBox(height: AppSpacing.lg),
         ],

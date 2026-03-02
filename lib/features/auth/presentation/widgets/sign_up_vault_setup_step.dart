@@ -13,12 +13,16 @@ class SignUpVaultSetupStep extends StatelessWidget {
     required this.passphraseController,
     required this.confirmPassphraseController,
     required this.onContinue,
+    this.isLoading = false,
+    this.errorText,
   });
 
   final GlobalKey<FormState> formKey;
   final TextEditingController passphraseController;
   final TextEditingController confirmPassphraseController;
   final VoidCallback onContinue;
+  final bool isLoading;
+  final String? errorText;
 
   @override
   Widget build(BuildContext context) {
@@ -117,6 +121,15 @@ class SignUpVaultSetupStep extends StatelessWidget {
                       passphraseController.text,
                     ),
                   ),
+                  if (errorText != null) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      errorText!,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colorScheme.error,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -128,7 +141,8 @@ class SignUpVaultSetupStep extends StatelessWidget {
             ),
             child: PrimaryButton(
               label: AppStrings.continueText,
-              onPressed: onContinue,
+              onPressed: isLoading ? null : onContinue,
+              isLoading: isLoading,
             ),
           ),
         ],

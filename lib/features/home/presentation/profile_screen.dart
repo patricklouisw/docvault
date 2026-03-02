@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:docvault/core/constants/app_spacing.dart';
 import 'package:docvault/core/constants/app_strings.dart';
 import 'package:docvault/features/auth/domain/auth_provider.dart';
+import 'package:docvault/features/vault/domain/vault_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -108,6 +109,8 @@ class ProfileScreen extends ConsumerWidget {
 
   Future<void> _onLogOut(WidgetRef ref) async {
     try {
+      // Clear MK from memory before signing out
+      ref.read(vaultProvider.notifier).lock();
       await ref.read(authRepositoryProvider).signOut();
     } catch (e, stackTrace) {
       log(

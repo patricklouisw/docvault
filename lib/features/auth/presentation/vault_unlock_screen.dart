@@ -1,4 +1,8 @@
+import 'dart:developer';
+
+import 'package:cryptography/cryptography.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:docvault/app/router.dart';
@@ -8,41 +12,81 @@ import 'package:docvault/core/utils/validators.dart';
 import 'package:docvault/core/widgets/password_field.dart';
 import 'package:docvault/core/widgets/primary_button.dart';
 import 'package:docvault/core/widgets/underline_text_field.dart';
+import 'package:docvault/features/auth/domain/auth_provider.dart';
+import 'package:docvault/features/vault/domain/vault_provider.dart';
 
-class VaultUnlockScreen extends StatefulWidget {
+class VaultUnlockScreen extends ConsumerStatefulWidget {
   const VaultUnlockScreen({super.key});
 
   @override
-  State<VaultUnlockScreen> createState() =>
+  ConsumerState<VaultUnlockScreen> createState() =>
       _VaultUnlockScreenState();
 }
 
 class _VaultUnlockScreenState
-    extends State<VaultUnlockScreen> {
+    extends ConsumerState<VaultUnlockScreen> {
   final _formKey = GlobalKey<FormState>();
   final _passphraseController = TextEditingController();
   final _recoveryController = TextEditingController();
   bool _useRecovery = false;
+  bool _isLoading = false;
   String? _errorText;
 
-  void _onUnlock() {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
+  Future<void> _onUnlock() async {
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
 
-    if (_useRecovery) {
-      // Recovery phrase flow — navigate to vault setup (steps 3 & 4)
-      context.go(AppRoutes.signUp, extra: 2);
-    } else {
-      // Passphrase flow — placeholder, will be wired to crypto service
-      // TODO: Validate passphrase against stored crypto metadata
-      final isValid = true; // Placeholder
-      if (isValid) {
-        setState(() => _errorText = null);
-        context.go(AppRoutes.home);
+    setState(() {
+      _isLoading = true;
+      _errorText = null;
+    });
+
+    try {
+      final uid =
+          ref.read(authRepositoryProvider).currentUser!.uid;
+      final vaultNotifier =
+          ref.read(vaultProvider.notifier);
+
+      if (_useRecovery) {
+        await vaultNotifier.unlockWithRecovery(
+          uid: uid,
+          recoveryPhrase: _recoveryController.text.trim(),
+        );
       } else {
-        setState(
-          () => _errorText = AppStrings.incorrectPassphrase,
+        await vaultNotifier.unlockWithPassphrase(
+          uid: uid,
+          passphrase: _passphraseController.text,
         );
       }
+
+      if (!mounted) return;
+
+      if (_useRecovery) {
+        // Recovery unlock → redirect to sign-up steps 3-4
+        // so user creates a new passphrase + gets new recovery phrase.
+        context.go(AppRoutes.signUp, extra: 2);
+      } else {
+        context.go(AppRoutes.home);
+      }
+    } on SecretBoxAuthenticationError {
+      setState(
+        () => _errorText = _useRecovery
+            ? AppStrings.incorrectRecoveryPhrase
+            : AppStrings.incorrectPassphrase,
+      );
+    } catch (e, stackTrace) {
+      log(
+        'Vault unlock error: $e',
+        name: 'VaultUnlockScreen',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      setState(
+        () => _errorText = 'Unlock failed. Please try again.',
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -106,7 +150,8 @@ class _VaultUnlockScreenState
                 // Input field
                 if (_useRecovery)
                   UnderlineTextField(
-                    label: AppStrings.useRecoveryPhraseInstead,
+                    label:
+                        AppStrings.useRecoveryPhraseInstead,
                     controller: _recoveryController,
                     validator: Validators.required,
                   )
@@ -130,12 +175,14 @@ class _VaultUnlockScreenState
                 // Toggle link
                 Center(
                   child: TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _useRecovery = !_useRecovery;
-                        _errorText = null;
-                      });
-                    },
+                    onPressed: _isLoading
+                        ? null
+                        : () {
+                            setState(() {
+                              _useRecovery = !_useRecovery;
+                              _errorText = null;
+                            });
+                          },
                     child: Text(
                       _useRecovery
                           ? AppStrings.enterPassphrase
@@ -150,7 +197,8 @@ class _VaultUnlockScreenState
                 const Spacer(),
                 PrimaryButton(
                   label: AppStrings.unlock,
-                  onPressed: _onUnlock,
+                  onPressed: _isLoading ? null : _onUnlock,
+                  isLoading: _isLoading,
                 ),
                 const SizedBox(height: AppSpacing.xl),
               ],

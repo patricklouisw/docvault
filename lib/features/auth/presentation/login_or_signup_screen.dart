@@ -41,12 +41,12 @@ class _LoginOrSignupScreenState extends ConsumerState<LoginOrSignupScreen> {
       if (!mounted) return;
 
       if (userData != null) {
-        // Returning user — go to vault unlock.
+        // Returning user — check vault status.
         log(
-          'Returning user — going to vault unlock',
+          'Returning user — going to vault check',
           name: 'LoginOrSignupScreen',
         );
-        context.go(AppRoutes.vaultUnlock);
+        context.go(AppRoutes.vaultCheck);
       } else {
         // New user — create doc, then vault setup (steps 3 & 4).
         log(

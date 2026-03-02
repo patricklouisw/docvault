@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:docvault/app/router.dart';
 import 'package:docvault/core/widgets/progress_bar.dart';
 import 'package:docvault/features/auth/domain/auth_provider.dart';
+import 'package:docvault/features/vault/domain/vault_provider.dart';
 import 'package:docvault/features/auth/presentation/widgets/sign_up_profile_step.dart';
 import 'package:docvault/features/auth/presentation/widgets/sign_up_account_step.dart';
 import 'package:docvault/features/auth/presentation/widgets/sign_up_vault_setup_step.dart';
@@ -47,6 +48,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   // Step 4 state
   bool _hasSavedRecoveryPhrase = false;
+  String? _recoveryPhrase;
 
   bool _isLoading = false;
   String? _errorText;
@@ -96,6 +98,12 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         password: _passwordController.text,
       );
 
+      // Create user doc now so crypto metadata can be
+      // written in step 3.
+      final userRepo = ref.read(userRepositoryProvider);
+      final uid = authRepo.currentUser!.uid;
+      await userRepo.createUserIfNotExists(uid);
+
       if (!mounted) return;
       _nextPage();
     } on FirebaseAuthException catch (e) {
@@ -106,36 +114,58 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     }
   }
 
-  void _onStep3Continue() {
-    if (_step3FormKey.currentState?.validate() ?? false) {
-      _nextPage();
-    }
-  }
+  bool get _isRecoveryReSetup =>
+      ref.read(vaultProvider) is VaultUnlocked;
 
-  Future<void> _onStep4Continue() async {
-    setState(() => _isLoading = true);
+  Future<void> _onStep3Continue() async {
+    if (!(_step3FormKey.currentState?.validate() ?? false)) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorText = null;
+    });
 
     try {
-      final authRepo = ref.read(authRepositoryProvider);
-      final userRepo = ref.read(userRepositoryProvider);
-      final uid = authRepo.currentUser!.uid;
-      await userRepo.createUserIfNotExists(uid);
+      final uid =
+          ref.read(authRepositoryProvider).currentUser!.uid;
+      final vaultNotifier =
+          ref.read(vaultProvider.notifier);
+
+      final String phrase;
+      if (_isRecoveryReSetup) {
+        // Vault already unlocked via recovery phrase —
+        // re-wrap existing MK with new passphrase + new recovery.
+        phrase = await vaultNotifier.reSetup(
+          uid: uid,
+          newPassphrase: _passphraseController.text,
+        );
+      } else {
+        // Fresh sign-up — generate new MK.
+        phrase = await vaultNotifier.setup(
+          uid: uid,
+          passphrase: _passphraseController.text,
+        );
+      }
 
       if (!mounted) return;
-      context.go(AppRoutes.home);
-    } on Exception catch (e) {
-      log('User doc creation error: $e',
-          name: 'SignUpScreen');
+      setState(() => _recoveryPhrase = phrase);
+      _nextPage();
+    } catch (e) {
+      log('Vault setup error: $e', name: 'SignUpScreen');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content:
-              Text('Something went wrong. Please try again.'),
-        ),
+      setState(
+        () => _errorText =
+            'Vault setup failed. Please try again.',
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _onStep4Continue() {
+    context.go(AppRoutes.home);
   }
 
   String _mapAuthError(String code) {
@@ -219,8 +249,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             confirmPassphraseController:
                 _confirmPassphraseController,
             onContinue: _onStep3Continue,
+            isLoading: _isLoading,
+            errorText: _errorText,
           ),
           SignUpRecoveryPhraseStep(
+            recoveryPhrase: _recoveryPhrase ?? '',
             hasSavedRecoveryPhrase: _hasSavedRecoveryPhrase,
             onSavedChanged: (value) {
               setState(
@@ -228,7 +261,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               );
             },
             onContinue: _onStep4Continue,
-            isLoading: _isLoading,
           ),
         ],
       ),

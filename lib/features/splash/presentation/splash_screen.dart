@@ -25,9 +25,9 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
 
-    // If already authenticated, go straight to vault unlock.
+    // If already authenticated, check vault status.
     if (FirebaseAuth.instance.currentUser != null) {
-      context.go(AppRoutes.vaultUnlock);
+      context.go(AppRoutes.vaultCheck);
       return;
     }
 

@@ -34,6 +34,16 @@ class UserRepository {
     return data != null && data.containsKey('crypto');
   }
 
+  /// Returns the crypto metadata map, or null if vault not set up.
+  Future<Map<String, dynamic>?> getCryptoMetadata(
+    String uid,
+  ) async {
+    final snapshot = await _usersRef.doc(uid).get();
+    final data = snapshot.data();
+    if (data == null || !data.containsKey('crypto')) return null;
+    return data['crypto'] as Map<String, dynamic>;
+  }
+
   /// Returns the user document data, or null if it doesn't exist.
   Future<Map<String, dynamic>?> getUserData(String uid) async {
     final snapshot = await _usersRef.doc(uid).get();

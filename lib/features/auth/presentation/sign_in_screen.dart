@@ -48,7 +48,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       await userRepo.createUserIfNotExists(uid);
 
       if (!mounted) return;
-      context.go(AppRoutes.vaultUnlock);
+      context.go(AppRoutes.vaultCheck);
     } on FirebaseAuthException catch (e) {
       log('Sign in FirebaseAuth error: ${e.code}', name: 'SignInScreen');
       setState(() => _errorText = _mapAuthError(e.code));
@@ -82,7 +82,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       await userRepo.createUserIfNotExists(uid);
 
       if (!mounted) return;
-      context.go(AppRoutes.vaultUnlock);
+      context.go(AppRoutes.vaultCheck);
     } on FirebaseAuthException catch (e) {
       log('Social sign in FirebaseAuth error: ${e.code}', name: 'SignInScreen');
       setState(() => _errorText = _mapAuthError(e.code));

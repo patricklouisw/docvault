@@ -255,6 +255,7 @@ Email, password, phone, passphrase match validators.
 - `unlockWithPassphrase(uid, passphrase)` — fetch crypto metadata, derive PDK, unwrap MK
 - `unlockWithRecovery(uid, recoveryPhrase)` — fetch recovery metadata, derive RDK, unwrap MK
 - `resetPassphrase(uid, masterKey, newPassphrase)` — new salt + PDK, re-wrap MK, update Firestore
+- `reSetupVault(uid, masterKey, newPassphrase)` — **re-setup after recovery unlock**: re-wraps existing MK with new passphrase AND generates new recovery phrase + new recovery wrapping. Replaces all crypto metadata in Firestore. Returns new recovery phrase
 - **Firestore `users/{uid}` crypto metadata structure:**
   ```json
   {
@@ -288,7 +289,7 @@ Email, password, phone, passphrase match validators.
   - `unlockWithPassphrase(uid, passphrase)` → calls repository, sets VaultUnlocked
   - `unlockWithRecovery(uid, recoveryPhrase)` → calls repository, sets VaultUnlocked
   - `lock()` → zeros MK bytes via `fillRange(0, length, 0)`, sets VaultLocked
-  - `resetPassphrase(uid, newPassphrase)` → re-wraps existing MK
+  - `reSetup(uid, newPassphrase)` → re-wraps existing MK with new passphrase + generates new recovery phrase (called after recovery unlock). Only callable when vault is unlocked (MK in memory). Returns new recovery phrase
 - Providers: `cryptoServiceProvider`, `vaultRepositoryProvider`, `vaultProvider`
 
 - [ ] ### 7.6 VaultCheckScreen + router updates
@@ -310,7 +311,11 @@ Email, password, phone, passphrase match validators.
 - [ ] ### 7.8 Wire sign-up steps 3–4 to real crypto
 - **`sign_up_screen.dart`:**
   - Move `createUserIfNotExists()` from `_onStep4Continue()` to `_onStep2Continue()` (user doc must exist before crypto write)
-  - Make `_onStep3Continue()` async: call `vaultNotifier.setup(uid, passphrase)` → store returned recovery phrase in `_recoveryPhrase` state → advance to step 4
+  - Add `_isRecoveryReSetup` getter — checks if `vaultProvider` state is `VaultUnlocked` (MK already in memory from recovery unlock)
+  - Make `_onStep3Continue()` async with two paths:
+    - **Fresh sign-up** (`_isRecoveryReSetup` = false): call `vaultNotifier.setup(uid, passphrase)` → generates new MK + recovery phrase
+    - **Recovery re-setup** (`_isRecoveryReSetup` = true): call `vaultNotifier.reSetup(uid, newPassphrase)` → re-wraps existing MK + generates new recovery phrase
+  - Store returned recovery phrase in `_recoveryPhrase` state → advance to step 4
   - Simplify `_onStep4Continue()`: just navigate to home (crypto already written in step 3)
   - Pass `_recoveryPhrase` to `SignUpRecoveryPhraseStep`
 - **`sign_up_vault_setup_step.dart`:** Add `isLoading` and `errorText` params (matching `SignUpAccountStep` pattern)
@@ -320,9 +325,8 @@ Email, password, phone, passphrase match validators.
 - Convert from `StatefulWidget` to `ConsumerStatefulWidget`
 - Add `_isLoading` state, loading indicator on PrimaryButton
 - Make `_onUnlock()` async:
-  - Passphrase mode: `vaultNotifier.unlockWithPassphrase(uid, passphrase)`
-  - Recovery mode: `vaultNotifier.unlockWithRecovery(uid, phrase)`
-  - On success → `context.go(AppRoutes.home)`
+  - Passphrase mode: `vaultNotifier.unlockWithPassphrase(uid, passphrase)` → on success → `context.go(AppRoutes.home)`
+  - Recovery mode: `vaultNotifier.unlockWithRecovery(uid, phrase)` → on success → `context.go(AppRoutes.signUp, extra: 2)` (redirects to steps 3-4 for mandatory passphrase re-setup + new recovery phrase)
   - On `SecretBoxAuthenticationError` → show "Incorrect passphrase" / "Incorrect recovery phrase"
 
 - [ ] ### 7.10 Logout — clear MK from memory

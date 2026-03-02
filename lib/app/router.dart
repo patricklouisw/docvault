@@ -13,6 +13,7 @@ import 'package:docvault/features/auth/presentation/forgot_password_email_screen
 import 'package:docvault/features/auth/presentation/forgot_password_otp_screen.dart';
 import 'package:docvault/features/auth/presentation/forgot_password_new_password_screen.dart';
 import 'package:docvault/features/auth/presentation/vault_unlock_screen.dart';
+import 'package:docvault/features/vault/presentation/vault_check_screen.dart';
 import 'package:docvault/features/home/presentation/home_shell_screen.dart';
 import 'package:docvault/features/home/presentation/documents_placeholder_screen.dart';
 import 'package:docvault/features/home/presentation/packages_placeholder_screen.dart';
@@ -32,6 +33,7 @@ class AppRoutes {
   static const forgotPasswordOtp = '/forgot-password/otp';
   static const forgotPasswordNewPassword =
       '/forgot-password/new-password';
+  static const vaultCheck = '/vault/check';
   static const vaultUnlock = '/vault/unlock';
   static const home = '/home';
   static const documents = '/home/documents';
@@ -80,7 +82,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (currentPath == AppRoutes.splash) return null;
 
       // Authenticated user trying to visit login/signup screens
-      // → send them to vault unlock.
+      // → send them to vault check (setup or unlock).
       if (isLoggedIn && _publicRoutes.contains(currentPath)) {
         // Allow dev menu even when logged in.
         if (currentPath == AppRoutes.devMenu) return null;
@@ -91,7 +93,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             currentPath == AppRoutes.signUp) {
           return null;
         }
-        return AppRoutes.vaultUnlock;
+        return AppRoutes.vaultCheck;
       }
 
       // Unauthenticated user trying to visit protected routes
@@ -146,6 +148,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.forgotPasswordNewPassword,
         builder: (context, state) =>
             const ForgotPasswordNewPasswordScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.vaultCheck,
+        builder: (context, state) =>
+            const VaultCheckScreen(),
       ),
       GoRoute(
         path: AppRoutes.vaultUnlock,

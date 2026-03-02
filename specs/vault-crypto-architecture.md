@@ -148,14 +148,27 @@ The "magic" here: if you type the wrong passphrase, Argon2id produces a differen
 
 ---
 
-### Flow 3: Vault Unlock with Recovery Phrase
+### Flow 3: Vault Unlock with Recovery Phrase (+ Mandatory Re-Setup)
 
-Same as Flow 2, but uses the recovery path:
+The recovery phrase is like a **one-time emergency spare key**. When you use it, the vault opens — but the spare key is "spent." You must immediately create a new passphrase and receive a new recovery phrase.
+
+What the user sees:
+
+```
+Vault Unlock screen
+  → Toggle "Use recovery phrase instead"
+  → Type 12 words → tap "Unlock" → [Loading...]
+  → "Secure Your Vault" screen (create NEW passphrase)
+  → "Your Recovery Phrase" screen (NEW 12 words shown)
+  → Home
+```
+
+What happens behind the scenes — **Part A: Decrypt with recovery phrase**
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
 │ User toggles to "Use recovery phrase instead"                 │
-│ Types their 12 words                                          │
+│ Types their 12 words, taps "Unlock"                           │
 │                                                               │
 │  1. Fetch crypto.recovery metadata from Firestore             │
 │     → get recovery salt, recovery wrappedMasterKey            │
@@ -165,10 +178,48 @@ Same as Flow 2, but uses the recovery path:
 │  3. XChaCha20-Poly1305.decrypt(recovery wrappedMK, using RDK) │
 │     → Master Key                                              │
 │                                                               │
-│  ✅ Success → VaultUnlocked, navigate to Home                 │
+│  ✅ Success: MK is now in app memory (VaultUnlocked)          │
+│     → Navigate to sign-up screen at Step 3 (NOT home!)        │
+│                                                               │
 │  ❌ Failure → "Incorrect recovery phrase" error               │
 └───────────────────────────────────────────────────────────────┘
 ```
+
+What happens behind the scenes — **Part B: Re-setup with new passphrase**
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ STEP 3: User enters a new vault passphrase, taps "Continue"      │
+│                                                                    │
+│  The app detects the vault is already unlocked (MK in memory     │
+│  from Part A), so it does a RE-SETUP instead of a fresh setup:   │
+│                                                                    │
+│  1. DO NOT generate a new Master Key — reuse the existing MK!    │
+│     (This is crucial — existing encrypted files depend on it)     │
+│                                                                    │
+│  2. Generate NEW Salt A (16 random bytes)                         │
+│  3. Argon2id(new passphrase + new Salt A) → new PDK              │
+│  4. XChaCha20-Poly1305.encrypt(MK, using new PDK) → new wrappedMK│
+│                                                                    │
+│  5. Pick 12 NEW random words → new recovery phrase                │
+│  6. Generate NEW Salt B (16 random bytes)                         │
+│  7. Argon2id(new recovery phrase + new Salt B) → new RDK          │
+│  8. XChaCha20-Poly1305.encrypt(MK, using new RDK) → new wrappedMK_R│
+│                                                                    │
+│  9. REPLACE crypto metadata in Firestore users/{uid}:             │
+│     → Old salts, old wrappedMasterKey, old recovery: ALL replaced │
+│     → The old recovery phrase is now permanently useless           │
+│                                                                    │
+│ 10. Show new recovery phrase on Step 4                             │
+│ 11. User saves it → continues to Home                             │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+Why re-setup instead of just going home?
+
+- **Security**: If someone found your old recovery phrase, they could use it again. After re-setup, the old phrase is dead — all the Firestore data it depends on (salt, wrappedMK_R) has been replaced.
+- **No data loss**: The Master Key stays the same, so every file encrypted with it still works perfectly.
+- **Fresh start**: You now have a new passphrase you remember AND a new recovery phrase to write down.
 
 ---
 
@@ -247,7 +298,7 @@ This `VaultCheckScreen` is important because it handles an edge case: what if a 
 │  │  State: VaultLocked | VaultUnlocked(MK) | VaultSetupReq    │ │
 │  │                                                             │ │
 │  │  Methods: setup() | unlockWithPassphrase() |                │ │
-│  │           unlockWithRecovery() | lock() | resetPassphrase() │ │
+│  │           unlockWithRecovery() | lock() | reSetup()         │ │
 │  └──────────────────────────┬──────────────────────────────────┘ │
 │                             │                                    │
 └─────────────────────────────┼────────────────────────────────────┘
@@ -322,7 +373,7 @@ users/
 | Secret | Where it lives | Lifetime |
 |--------|---------------|----------|
 | Vault passphrase | User's brain | Forever (user memorizes it) |
-| Recovery phrase | User's written backup | Shown once during setup, then gone |
+| Recovery phrase | User's written backup | Shown once during setup (or re-setup after recovery). Invalidated when used — replaced by a new phrase |
 | Master Key (MK) | App memory only | While app is open and vault is unlocked |
 | PDK (password-derived key) | Nowhere — recomputed each time | Only during unlock computation |
 | RDK (recovery-derived key) | Nowhere — recomputed each time | Only during recovery computation |
@@ -360,9 +411,10 @@ They would still need to brute-force the passphrase through Argon2id (64MB RAM x
 |----------|-------------|
 | Wrong passphrase | XChaCha20-Poly1305 auth tag fails → "Incorrect passphrase" error |
 | Wrong recovery phrase | Same as above → "Incorrect recovery phrase" error |
+| User unlocks with recovery phrase | MK decrypted → user redirected to steps 3-4 to create new passphrase + get new recovery phrase. Old recovery phrase becomes permanently useless |
+| User force-quits during recovery re-setup | MK is lost from memory. Old recovery phrase still works (Firestore wasn't updated yet). User can retry recovery unlock |
 | User force-quits during vault setup | Firebase account exists but no `crypto` field → VaultCheckScreen detects this and sends user back to vault setup steps |
 | App crashes while unlocked | MK lost from memory → user must re-enter passphrase on next launch |
-| User changes passphrase | New salt + PDK computed, MK re-wrapped. Recovery phrase stays valid (it wraps the same MK with a separate key) |
 | Argon2id slow on device | Expected: 1-3 seconds on mobile. UI shows loading spinner. Acceptable tradeoff for security |
 
 ---
