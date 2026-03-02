@@ -13,6 +13,7 @@ class HomeShellScreen extends StatelessWidget {
     AppRoutes.documents,
     AppRoutes.packages,
     AppRoutes.templates,
+    AppRoutes.profile,
   ];
 
   int _currentIndex(BuildContext context) {
@@ -50,6 +51,11 @@ class HomeShellScreen extends StatelessWidget {
             icon: Icon(Icons.description_outlined),
             selectedIcon: Icon(Icons.description),
             label: AppStrings.templates,
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: AppStrings.profile,
           ),
         ],
       ),

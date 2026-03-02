@@ -51,8 +51,15 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       if (!mounted) return;
       context.go(AppRoutes.vaultUnlock);
     } on FirebaseAuthException catch (e) {
-      log('Sign in error: ${e.code}', name: 'SignInScreen');
+      log('Sign in FirebaseAuth error: ${e.code}',
+          name: 'SignInScreen');
       setState(() => _errorText = _mapAuthError(e.code));
+    } catch (e, stackTrace) {
+      log('Sign in unexpected error: $e',
+          name: 'SignInScreen',
+          error: e,
+          stackTrace: stackTrace);
+      setState(() => _errorText = '$e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -77,9 +84,15 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       if (!mounted) return;
       context.go(AppRoutes.vaultUnlock);
     } on FirebaseAuthException catch (e) {
-      log('Social sign in error: ${e.code}',
+      log('Social sign in FirebaseAuth error: ${e.code}',
           name: 'SignInScreen');
       setState(() => _errorText = _mapAuthError(e.code));
+    } catch (e, stackTrace) {
+      log('Social sign in unexpected error: $e',
+          name: 'SignInScreen',
+          error: e,
+          stackTrace: stackTrace);
+      setState(() => _errorText = '$e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

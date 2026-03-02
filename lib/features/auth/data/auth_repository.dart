@@ -19,13 +19,19 @@ class AuthRepository {
     required String email,
     required String password,
   }) async {
+    log('signInWithEmail: starting with email=$email',
+        name: 'AuthRepository');
     try {
-      return await _auth.signInWithEmailAndPassword(
+      final result = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
+      log('signInWithEmail: success, uid=${result.user?.uid}',
+          name: 'AuthRepository');
+      return result;
     } on FirebaseAuthException catch (e) {
-      log('signInWithEmail failed: ${e.code}', name: 'AuthRepository');
+      log('signInWithEmail failed: ${e.code} — ${e.message}',
+          name: 'AuthRepository');
       rethrow;
     }
   }
@@ -34,57 +40,111 @@ class AuthRepository {
     required String email,
     required String password,
   }) async {
+    log('signUpWithEmail: starting with email=$email',
+        name: 'AuthRepository');
     try {
-      return await _auth.createUserWithEmailAndPassword(
+      final result = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
+      log('signUpWithEmail: success, uid=${result.user?.uid}',
+          name: 'AuthRepository');
+      return result;
     } on FirebaseAuthException catch (e) {
-      log('signUpWithEmail failed: ${e.code}', name: 'AuthRepository');
+      log('signUpWithEmail failed: ${e.code} — ${e.message}',
+          name: 'AuthRepository');
       rethrow;
     }
   }
 
   Future<UserCredential> signInWithGoogle() async {
-    final googleUser = await _googleSignIn.signIn();
-    if (googleUser == null) {
-      throw FirebaseAuthException(
-        code: 'sign-in-cancelled',
-        message: 'Google sign-in was cancelled.',
+    log('signInWithGoogle: starting Google sign-in flow',
+        name: 'AuthRepository');
+    try {
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        log('signInWithGoogle: user cancelled',
+            name: 'AuthRepository');
+        throw FirebaseAuthException(
+          code: 'sign-in-cancelled',
+          message: 'Google sign-in was cancelled.',
+        );
+      }
+
+      log('signInWithGoogle: got googleUser=${googleUser.email}',
+          name: 'AuthRepository');
+
+      final googleAuth = await googleUser.authentication;
+      log('signInWithGoogle: got tokens, '
+          'accessToken=${googleAuth.accessToken != null}, '
+          'idToken=${googleAuth.idToken != null}',
+          name: 'AuthRepository');
+
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
       );
+
+      final result = await _auth.signInWithCredential(credential);
+      log('signInWithGoogle: success, uid=${result.user?.uid}',
+          name: 'AuthRepository');
+      return result;
+    } on FirebaseAuthException {
+      rethrow;
+    } catch (e, stackTrace) {
+      log('signInWithGoogle: unexpected error: $e',
+          name: 'AuthRepository',
+          error: e,
+          stackTrace: stackTrace);
+      rethrow;
     }
-
-    final googleAuth = await googleUser.authentication;
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
-
-    return _auth.signInWithCredential(credential);
   }
 
   Future<UserCredential> signInWithApple() async {
-    final appleProvider = AppleAuthProvider()
-      ..addScope('email')
-      ..addScope('name');
+    log('signInWithApple: starting Apple sign-in flow',
+        name: 'AuthRepository');
+    try {
+      final appleProvider = AppleAuthProvider()
+        ..addScope('email')
+        ..addScope('name');
 
-    return _auth.signInWithProvider(appleProvider);
+      final result = await _auth.signInWithProvider(appleProvider);
+      log('signInWithApple: success, uid=${result.user?.uid}',
+          name: 'AuthRepository');
+      return result;
+    } on FirebaseAuthException catch (e) {
+      log('signInWithApple failed: ${e.code} — ${e.message}',
+          name: 'AuthRepository');
+      rethrow;
+    } catch (e, stackTrace) {
+      log('signInWithApple: unexpected error: $e',
+          name: 'AuthRepository',
+          error: e,
+          stackTrace: stackTrace);
+      rethrow;
+    }
   }
 
   Future<void> sendPasswordResetEmail(String email) async {
+    log('sendPasswordResetEmail: email=$email',
+        name: 'AuthRepository');
     try {
       await _auth.sendPasswordResetEmail(email: email);
+      log('sendPasswordResetEmail: success',
+          name: 'AuthRepository');
     } on FirebaseAuthException catch (e) {
-      log('sendPasswordResetEmail failed: ${e.code}',
+      log('sendPasswordResetEmail failed: ${e.code} — ${e.message}',
           name: 'AuthRepository');
       rethrow;
     }
   }
 
   Future<void> signOut() async {
+    log('signOut: starting', name: 'AuthRepository');
     await Future.wait([
       _auth.signOut(),
       _googleSignIn.signOut(),
     ]);
+    log('signOut: complete', name: 'AuthRepository');
   }
 }

@@ -477,6 +477,7 @@ Firebase Auth state change (sign in, sign out, token refresh)
 | `/home/documents` | DocumentsPlaceholderScreen | Yes (ShellRoute) |
 | `/home/packages` | PackagesPlaceholderScreen | Yes (ShellRoute) |
 | `/home/templates` | TemplatesPlaceholderScreen | Yes (ShellRoute) |
+| `/home/profile` | ProfileScreen | Yes (ShellRoute) |
 
 ### How the Router Becomes Riverpod-Aware
 
@@ -522,11 +523,16 @@ ShellRoute(
     GoRoute(path: '/home/documents', ...),
     GoRoute(path: '/home/packages', ...),
     GoRoute(path: '/home/templates', ...),
+    GoRoute(path: '/home/profile', ...),
   ],
 ),
 ```
 
 `ShellRoute` wraps child routes in a shared shell (`HomeShellScreen` with `NavigationBar`). Switching tabs changes the child but keeps the shell. `NoTransitionPage` prevents animation between tabs.
+
+### Profile Tab & Sign-Out Flow
+
+The Profile tab (`/home/profile`) is a `ConsumerWidget` that displays the current user's initials, display name, and email from `currentUserProvider`. It includes a "Log Out" button that calls `ref.read(authRepositoryProvider).signOut()`. Because the router watches `authStateProvider`, signing out automatically triggers a redirect to `/login-or-signup` — no manual navigation needed.
 
 ### Navigation Methods
 
@@ -737,6 +743,16 @@ class PrimaryButton extends StatelessWidget {
 | `lib/features/onboarding/presentation/onboarding_screen.dart` | 3-page onboarding, sets `hasSeenOnboarding` flag |
 | `lib/features/onboarding/data/onboarding_repository.dart` | SharedPreferences wrapper for onboarding flag |
 
+### Home
+
+| File | Role |
+|------|------|
+| `lib/features/home/presentation/home_shell_screen.dart` | Bottom navigation shell with 4 tabs: Documents, Packages, Templates, Profile |
+| `lib/features/home/presentation/documents_placeholder_screen.dart` | Documents tab placeholder |
+| `lib/features/home/presentation/packages_placeholder_screen.dart` | Packages tab placeholder |
+| `lib/features/home/presentation/templates_placeholder_screen.dart` | Templates tab placeholder |
+| `lib/features/home/presentation/profile_screen.dart` | Profile tab: shows user info, "Log Out" button calls `authRepository.signOut()` |
+
 ---
 
 ## Summary: How Everything Connects
@@ -765,7 +781,8 @@ class PrimaryButton extends StatelessWidget {
                     │                   │
                     ▼                   ▼
         ref.read(authRepo)      Home, Documents,
-        ref.read(userRepo)      Packages, Templates
+        ref.read(userRepo)      Packages, Templates,
+                                Profile (sign-out)
                     │
                     ▼
           [Firebase Auth]

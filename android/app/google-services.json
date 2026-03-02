@@ -12,7 +12,12 @@
           "package_name": "com.example.docvault"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "402380573985-rss0fj1ibgbafh37qdds83bmo4ef8c6n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDcfufRWkxvlrZv0XSb4bP1PoOi6FL_EEs"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "402380573985-rss0fj1ibgbafh37qdds83bmo4ef8c6n.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "402380573985-pd9eshrdt4qnuk1urmsskapopovm75k2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.docvault"
+              }
+            }
+          ]
         }
       }
     }

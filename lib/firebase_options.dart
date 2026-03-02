@@ -67,6 +67,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '402380573985',
     projectId: 'docvault-8b0b1',
     storageBucket: 'docvault-8b0b1.firebasestorage.app',
+    iosClientId: '402380573985-pd9eshrdt4qnuk1urmsskapopovm75k2.apps.googleusercontent.com',
     iosBundleId: 'com.example.docvault',
   );
 
@@ -76,6 +77,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '402380573985',
     projectId: 'docvault-8b0b1',
     storageBucket: 'docvault-8b0b1.firebasestorage.app',
+    iosClientId: '402380573985-pd9eshrdt4qnuk1urmsskapopovm75k2.apps.googleusercontent.com',
     iosBundleId: 'com.example.docvault',
   );
+
 }

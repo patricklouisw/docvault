@@ -42,11 +42,20 @@ class _SignUpMethodScreenState
       // go straight to vault setup (step index 2).
       context.push(AppRoutes.signUp, extra: 2);
     } on FirebaseAuthException catch (e) {
-      log('Social sign up error: ${e.code}',
+      log('Social sign up FirebaseAuth error: ${e.code}',
           name: 'SignUpMethodScreen');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(_mapAuthError(e.code))),
+      );
+    } catch (e, stackTrace) {
+      log('Social sign up unexpected error: $e',
+          name: 'SignUpMethodScreen',
+          error: e,
+          stackTrace: stackTrace);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e')),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);

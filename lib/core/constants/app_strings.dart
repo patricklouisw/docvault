@@ -131,7 +131,9 @@ class AppStrings {
   static const documents = 'Documents';
   static const packages = 'Packages';
   static const templates = 'Templates';
+  static const profile = 'Profile';
   static const comingSoon = 'Coming Soon';
+  static const logOut = 'Log Out';
 
   // Validation
   static const fieldRequired = 'This field is required';

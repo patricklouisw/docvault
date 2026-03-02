@@ -18,6 +18,7 @@ import 'package:docvault/features/home/presentation/home_shell_screen.dart';
 import 'package:docvault/features/home/presentation/documents_placeholder_screen.dart';
 import 'package:docvault/features/home/presentation/packages_placeholder_screen.dart';
 import 'package:docvault/features/home/presentation/templates_placeholder_screen.dart';
+import 'package:docvault/features/home/presentation/profile_screen.dart';
 
 class AppRoutes {
   AppRoutes._();
@@ -38,6 +39,7 @@ class AppRoutes {
   static const documents = '/home/documents';
   static const packages = '/home/packages';
   static const templates = '/home/templates';
+  static const profile = '/home/profile';
 }
 
 /// Routes that don't require authentication.
@@ -160,6 +162,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) =>
                 const NoTransitionPage(
               child: TemplatesPlaceholderScreen(),
+            ),
+          ),
+          GoRoute(
+            path: AppRoutes.profile,
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(
+              child: ProfileScreen(),
             ),
           ),
         ],

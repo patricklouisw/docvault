@@ -157,14 +157,19 @@ Email, password, phone, passphrase match validators.
 ## Phase 5: Home Shell
 
 - [x] ### 5.1 Home Shell — `lib/features/home/presentation/home_shell_screen.dart`
-- `Scaffold` + Material 3 `NavigationBar` with 3 tabs
-- Documents (`Icons.folder_outlined`), Packages (`Icons.inventory_2_outlined`), Templates (`Icons.description_outlined`)
+- `Scaffold` + Material 3 `NavigationBar` with 4 tabs
+- Documents (`Icons.folder_outlined`), Packages (`Icons.inventory_2_outlined`), Templates (`Icons.description_outlined`), Profile (`Icons.person_outline`)
 - Uses `ShellRoute` in go_router
 
 - [x] ### 5.2 Placeholder tabs
 - `documents_placeholder_screen.dart` — "Documents - Coming Soon"
 - `packages_placeholder_screen.dart` — "Packages - Coming Soon"
 - `templates_placeholder_screen.dart` — "Templates - Coming Soon"
+
+- [x] ### 5.3 Profile tab — `lib/features/home/presentation/profile_screen.dart`
+- `ConsumerWidget` showing user avatar (initials), display name, email from `currentUserProvider`
+- "Log Out" button calls `authRepository.signOut()` → router redirect sends user to `/login-or-signup`
+- Route: `/home/profile` added to `ShellRoute` in `router.dart`
 
 ---
 
