@@ -20,8 +20,7 @@ class LoginOrSignupScreen extends ConsumerStatefulWidget {
       _LoginOrSignupScreenState();
 }
 
-class _LoginOrSignupScreenState
-    extends ConsumerState<LoginOrSignupScreen> {
+class _LoginOrSignupScreenState extends ConsumerState<LoginOrSignupScreen> {
   bool _isLoading = false;
 
   Future<void> _onSocialSignIn(
@@ -40,21 +39,23 @@ class _LoginOrSignupScreenState
       if (!mounted) return;
       context.go(AppRoutes.vaultUnlock);
     } on FirebaseAuthException catch (e) {
-      log('Social sign in FirebaseAuth error: ${e.code}',
-          name: 'LoginOrSignupScreen');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_mapAuthError(e.code))),
+      log(
+        'Social sign in FirebaseAuth error: ${e.code}',
+        name: 'LoginOrSignupScreen',
       );
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_mapAuthError(e.code))));
     } catch (e, stackTrace) {
-      log('Social sign in unexpected error: $e',
-          name: 'LoginOrSignupScreen',
-          error: e,
-          stackTrace: stackTrace);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e')),
+      log(
+        'Social sign in unexpected error: $e',
+        name: 'LoginOrSignupScreen',
+        error: e,
+        stackTrace: stackTrace,
       );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -80,9 +81,7 @@ class _LoginOrSignupScreenState
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           child: Column(
             children: [
               const Spacer(),
@@ -91,8 +90,7 @@ class _LoginOrSignupScreenState
                 width: 200,
                 height: 200,
                 decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer
-                      .withValues(alpha: 0.3),
+                  color: colorScheme.primaryContainer.withValues(alpha: 0.3),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -119,33 +117,21 @@ class _LoginOrSignupScreenState
                 ),
                 onPressed: _isLoading
                     ? null
-                    : () => _onSocialSignIn(
-                          authRepo.signInWithGoogle,
-                        ),
+                    : () => _onSocialSignIn(authRepo.signInWithGoogle),
               ),
               const SizedBox(height: AppSpacing.md),
               SocialButton(
                 label: AppStrings.continueWithApple,
-                icon: Icon(
-                  Icons.apple,
-                  size: 24,
-                  color: colorScheme.onSurface,
-                ),
+                icon: Icon(Icons.apple, size: 24, color: colorScheme.onSurface),
                 onPressed: _isLoading
                     ? null
-                    : () => _onSocialSignIn(
-                          authRepo.signInWithApple,
-                        ),
+                    : () => _onSocialSignIn(authRepo.signInWithApple),
               ),
               const SizedBox(height: AppSpacing.lg),
               // "or" divider
               Row(
                 children: [
-                  Expanded(
-                    child: Divider(
-                      color: colorScheme.outlineVariant,
-                    ),
-                  ),
+                  Expanded(child: Divider(color: colorScheme.outlineVariant)),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.md,
@@ -157,11 +143,7 @@ class _LoginOrSignupScreenState
                       ),
                     ),
                   ),
-                  Expanded(
-                    child: Divider(
-                      color: colorScheme.outlineVariant,
-                    ),
-                  ),
+                  Expanded(child: Divider(color: colorScheme.outlineVariant)),
                 ],
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -176,17 +158,13 @@ class _LoginOrSignupScreenState
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    AppStrings.dontHaveAccount,
-                    style: textTheme.bodyMedium,
-                  ),
+                  Text(AppStrings.dontHaveAccount, style: textTheme.bodyMedium),
                   GestureDetector(
                     onTap: _isLoading
                         ? null
-                        : () => context
-                            .push(AppRoutes.signUpMethod),
+                        : () => context.push(AppRoutes.signUpMethod),
                     child: Text(
-                      AppStrings.signUp,
+                      AppStrings.signUpWithEmail,
                       style: textTheme.bodyMedium?.copyWith(
                         color: colorScheme.primary,
                         fontWeight: FontWeight.w600,
