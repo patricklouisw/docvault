@@ -167,30 +167,10 @@ class _LoginOrSignupScreenState extends ConsumerState<LoginOrSignupScreen> {
               ),
               const SizedBox(height: AppSpacing.lg),
               PrimaryButton(
-                label: AppStrings.signInWithPassword,
+                label: AppStrings.continueWithEmail,
                 onPressed: _isLoading
                     ? null
                     : () => context.push(AppRoutes.signIn),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              // "Don't have an account? Sign up"
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(AppStrings.dontHaveAccount, style: textTheme.bodyMedium),
-                  GestureDetector(
-                    onTap: _isLoading
-                        ? null
-                        : () => context.push(AppRoutes.signUp),
-                    child: Text(
-                      AppStrings.signUp,
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
               ),
               const SizedBox(height: AppSpacing.xl),
             ],

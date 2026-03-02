@@ -14,8 +14,6 @@ class SignUpAccountStep extends StatelessWidget {
     required this.emailController,
     required this.passwordController,
     required this.confirmPasswordController,
-    required this.rememberMe,
-    required this.onRememberMeChanged,
     required this.onContinue,
     this.isLoading = false,
     this.errorText,
@@ -25,8 +23,6 @@ class SignUpAccountStep extends StatelessWidget {
   final TextEditingController emailController;
   final TextEditingController passwordController;
   final TextEditingController confirmPasswordController;
-  final bool rememberMe;
-  final ValueChanged<bool> onRememberMeChanged;
   final VoidCallback onContinue;
   final bool isLoading;
   final String? errorText;
@@ -83,20 +79,6 @@ class SignUpAccountStep extends StatelessWidget {
                       value,
                       passwordController.text,
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Row(
-                    children: [
-                      Checkbox(
-                        value: rememberMe,
-                        onChanged: (value) =>
-                            onRememberMeChanged(value ?? false),
-                      ),
-                      Text(
-                        AppStrings.rememberMe,
-                        style: textTheme.bodyMedium,
-                      ),
-                    ],
                   ),
                   if (errorText != null) ...[
                     const SizedBox(height: AppSpacing.sm),

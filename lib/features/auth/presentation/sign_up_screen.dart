@@ -41,8 +41,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  bool _rememberMe = true;
-
   // Step 3 fields
   final _passphraseController = TextEditingController();
   final _confirmPassphraseController = TextEditingController();
@@ -211,10 +209,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             passwordController: _passwordController,
             confirmPasswordController:
                 _confirmPasswordController,
-            rememberMe: _rememberMe,
-            onRememberMeChanged: (value) {
-              setState(() => _rememberMe = value);
-            },
             onContinue: _onStep2Continue,
             isLoading: _isLoading,
             errorText: _errorText,

@@ -31,7 +31,7 @@ class AppStrings {
   static const continueWithFacebook = 'Continue with Facebook';
   static const continueWithApple = 'Continue with Apple';
   static const or = 'or';
-  static const signInWithPassword = 'Sign in with password';
+  static const continueWithEmail = 'Continue with Email';
   static const dontHaveAccount = "Don't have an account? ";
   static const signUp = 'Sign up';
 
@@ -58,7 +58,6 @@ class AppStrings {
   static const email = 'Email';
   static const password = 'Password';
   static const confirmPassword = 'Confirm Password';
-  static const rememberMe = 'Remember me';
   static const finish = 'Finish';
   static const signUpSuccessful = 'Sign Up Successful!';
   static const accountCreated = 'Your account has been created.';
@@ -68,7 +67,7 @@ class AppStrings {
   static const helloThere = 'Hello there';
   static const signInSubtitle =
       'Please enter your email & password to sign in.';
-  static const forgotPassword = 'Forgot Password';
+  static const forgotPassword = 'Forgot Password ?';
   static const orContinueWith = 'or continue with';
   static const signIn = 'Sign In';
   static const alreadyHaveAccount = 'Already have an account? ';

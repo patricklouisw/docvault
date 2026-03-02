@@ -25,7 +25,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _rememberMe = true;
   bool _isLoading = false;
   String? _errorText;
 
@@ -51,14 +50,15 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       if (!mounted) return;
       context.go(AppRoutes.vaultUnlock);
     } on FirebaseAuthException catch (e) {
-      log('Sign in FirebaseAuth error: ${e.code}',
-          name: 'SignInScreen');
+      log('Sign in FirebaseAuth error: ${e.code}', name: 'SignInScreen');
       setState(() => _errorText = _mapAuthError(e.code));
     } catch (e, stackTrace) {
-      log('Sign in unexpected error: $e',
-          name: 'SignInScreen',
-          error: e,
-          stackTrace: stackTrace);
+      log(
+        'Sign in unexpected error: $e',
+        name: 'SignInScreen',
+        error: e,
+        stackTrace: stackTrace,
+      );
       setState(() => _errorText = '$e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -84,14 +84,15 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       if (!mounted) return;
       context.go(AppRoutes.vaultUnlock);
     } on FirebaseAuthException catch (e) {
-      log('Social sign in FirebaseAuth error: ${e.code}',
-          name: 'SignInScreen');
+      log('Social sign in FirebaseAuth error: ${e.code}', name: 'SignInScreen');
       setState(() => _errorText = _mapAuthError(e.code));
     } catch (e, stackTrace) {
-      log('Social sign in unexpected error: $e',
-          name: 'SignInScreen',
-          error: e,
-          stackTrace: stackTrace);
+      log(
+        'Social sign in unexpected error: $e',
+        name: 'SignInScreen',
+        error: e,
+        stackTrace: stackTrace,
+      );
       setState(() => _errorText = '$e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -136,9 +137,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
         child: Form(
           key: _formKey,
           child: Column(
@@ -180,47 +179,50 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   ),
                 ),
               ],
-              const SizedBox(height: AppSpacing.md),
-              // Remember me
-              Row(
-                children: [
-                  Checkbox(
-                    value: _rememberMe,
-                    onChanged: (value) {
-                      setState(
-                        () => _rememberMe = value ?? false,
-                      );
-                    },
-                  ),
-                  Text(
-                    AppStrings.rememberMe,
-                    style: textTheme.bodyMedium,
-                  ),
-                ],
-              ),
+              const SizedBox(height: AppSpacing.sm),
               // Forgot Password
-              Center(
+              Align(
+                alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: () => context.push(
-                    AppRoutes.forgotPasswordEmail,
-                  ),
+                  onPressed: () => context.push(AppRoutes.forgotPasswordEmail),
                   child: Text(
                     AppStrings.forgotPassword,
-                    style: TextStyle(
-                      color: colorScheme.primary,
-                    ),
+                    style: TextStyle(color: colorScheme.primary),
                   ),
                 ),
               ),
+              const SizedBox(height: AppSpacing.sm),
+              PrimaryButton(
+                label: AppStrings.signIn,
+                onPressed: _isLoading ? null : _onSignIn,
+                isLoading: _isLoading,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(AppStrings.dontHaveAccount, style: textTheme.bodyMedium),
+                  GestureDetector(
+                    onTap: _isLoading
+                        ? null
+                        : () => context.push(AppRoutes.signUp),
+                    child: Text(
+                      AppStrings.signUp,
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
               const SizedBox(height: AppSpacing.md),
               // "or continue with" divider
               Row(
                 children: [
-                  Expanded(
-                    child: Divider(
-                      color: colorScheme.outlineVariant,
-                    ),
-                  ),
+                  Expanded(child: Divider(color: colorScheme.outlineVariant)),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.md,
@@ -232,11 +234,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       ),
                     ),
                   ),
-                  Expanded(
-                    child: Divider(
-                      color: colorScheme.outlineVariant,
-                    ),
-                  ),
+                  Expanded(child: Divider(color: colorScheme.outlineVariant)),
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
@@ -248,28 +246,18 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     icon: Icons.g_mobiledata,
                     onTap: _isLoading
                         ? null
-                        : () => _onSocialSignIn(
-                              authRepo.signInWithGoogle,
-                            ),
+                        : () => _onSocialSignIn(authRepo.signInWithGoogle),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   _SocialIconButton(
                     icon: Icons.apple,
                     onTap: _isLoading
                         ? null
-                        : () => _onSocialSignIn(
-                              authRepo.signInWithApple,
-                            ),
+                        : () => _onSocialSignIn(authRepo.signInWithApple),
                   ),
                 ],
               ),
               const SizedBox(height: AppSpacing.xl),
-              PrimaryButton(
-                label: AppStrings.signIn,
-                onPressed: _isLoading ? null : _onSignIn,
-                isLoading: _isLoading,
-              ),
-              const SizedBox(height: AppSpacing.lg),
             ],
           ),
         ),
@@ -279,10 +267,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
 }
 
 class _SocialIconButton extends StatelessWidget {
-  const _SocialIconButton({
-    required this.icon,
-    required this.onTap,
-  });
+  const _SocialIconButton({required this.icon, required this.onTap});
 
   final IconData icon;
   final VoidCallback? onTap;
@@ -298,9 +283,7 @@ class _SocialIconButton extends StatelessWidget {
         width: 60,
         height: 48,
         decoration: BoxDecoration(
-          border: Border.all(
-            color: colorScheme.outlineVariant,
-          ),
+          border: Border.all(color: colorScheme.outlineVariant),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(icon, color: colorScheme.onSurface),

@@ -12,7 +12,6 @@ class SignUpFormData {
     this.dateOfBirth,
     this.email = '',
     this.password = '',
-    this.rememberMe = true,
   });
 
   final String fullName;
@@ -21,7 +20,6 @@ class SignUpFormData {
   final DateTime? dateOfBirth;
   final String email;
   final String password;
-  final bool rememberMe;
 
   SignUpFormData copyWith({
     String? fullName,
@@ -30,7 +28,6 @@ class SignUpFormData {
     DateTime? dateOfBirth,
     String? email,
     String? password,
-    bool? rememberMe,
   }) {
     return SignUpFormData(
       fullName: fullName ?? this.fullName,
@@ -39,7 +36,6 @@ class SignUpFormData {
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       email: email ?? this.email,
       password: password ?? this.password,
-      rememberMe: rememberMe ?? this.rememberMe,
     );
   }
 }
@@ -64,12 +60,10 @@ class SignUpFormNotifier extends StateNotifier<SignUpFormData> {
   void updateStep2({
     required String email,
     required String password,
-    required bool rememberMe,
   }) {
     state = state.copyWith(
       email: email,
       password: password,
-      rememberMe: rememberMe,
     );
   }
 
