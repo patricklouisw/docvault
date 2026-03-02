@@ -26,10 +26,23 @@ class _VaultUnlockScreenState
   String? _errorText;
 
   void _onUnlock() {
-    if (_formKey.currentState?.validate() ?? false) {
-      // Placeholder — will be wired to crypto service
-      setState(() => _errorText = null);
-      context.go(AppRoutes.home);
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    if (_useRecovery) {
+      // Recovery phrase flow — navigate to vault setup (steps 3 & 4)
+      context.go(AppRoutes.signUp, extra: 2);
+    } else {
+      // Passphrase flow — placeholder, will be wired to crypto service
+      // TODO: Validate passphrase against stored crypto metadata
+      final isValid = true; // Placeholder
+      if (isValid) {
+        setState(() => _errorText = null);
+        context.go(AppRoutes.home);
+      } else {
+        setState(
+          () => _errorText = AppStrings.incorrectPassphrase,
+        );
+      }
     }
   }
 
