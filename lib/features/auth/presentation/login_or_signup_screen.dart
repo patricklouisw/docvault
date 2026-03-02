@@ -162,9 +162,9 @@ class _LoginOrSignupScreenState extends ConsumerState<LoginOrSignupScreen> {
                   GestureDetector(
                     onTap: _isLoading
                         ? null
-                        : () => context.push(AppRoutes.signUpMethod),
+                        : () => context.push(AppRoutes.signUp),
                     child: Text(
-                      AppStrings.signUpWithEmail,
+                      AppStrings.signUp,
                       style: textTheme.bodyMedium?.copyWith(
                         color: colorScheme.primary,
                         fontWeight: FontWeight.w600,
