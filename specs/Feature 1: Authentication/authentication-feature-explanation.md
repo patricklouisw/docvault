@@ -76,8 +76,9 @@ The auth system follows a **three-layer architecture**:
            ▼
 ┌──────────────────────────────┐
 │  appRouterProvider           │  ← Provider<GoRouter>
-│  (rebuilds router redirect   │     Redirects based on auth state
-│   logic when auth changes)    │
+│  (stable instance, uses       │     Redirects based on auth state
+│   refreshListenable to        │     via ref.listen + ChangeNotifier
+│   re-evaluate redirects)      │
 └──────────────────────────────┘
 ```
 
@@ -180,12 +181,7 @@ User opens app
     ▼
 [Splash Screen] ──2s delay──▶ [Onboarding] ──"Get Started"──▶ [Login or Sign Up]
                                                                       │
-                                                          "Don't have an account?"
-                                                                      │
-                                                                      ▼
-                                                            [Sign Up Method]
-                                                                      │
-                                                          "Sign up with email"
+                                                          "Don't have an account? Sign up"
                                                                       │
                                                                       ▼
                                                     ┌─────────────────────────────┐
@@ -215,10 +211,10 @@ User opens app
                                                         [Home Screen]
 ```
 
-### Flow 2: Social Sign-Up (Google/Apple → 2 Steps)
+### Flow 2: Social Sign-In/Sign-Up (Google/Apple — Smart Routing)
 
 ```
-[Sign Up Method]
+[Login or Sign Up]
       │
   Tap "Continue with Google" or "Continue with Apple"
       │
@@ -226,25 +222,32 @@ User opens app
   Firebase social auth (popup/redirect)
       │
       ▼
-  Create Firestore user doc
+  Check: does Firestore user doc exist?
       │
-      ▼
-  Navigate to Sign Up Screen at Step 3 (initialStep: 2)
+      ├─ YES (returning user) ──▶ [Vault Unlock Screen] ──▶ [Home Screen]
       │
-      ▼
-┌─────────────────────────────┐
-│  Step 3: Vault Setup        │  ← User starts here
-│         │                   │
-│         ▼                   │
-│  Step 4: Recovery Phrase    │
-│         │                   │
-└─────────┼───────────────────┘
-          │
-          ▼
-    [Home Screen]
+      └─ NO (new user)
+            │
+            ▼
+        Create Firestore user doc
+            │
+            ▼
+        Navigate to Sign Up Screen at Step 3 (initialStep: 2)
+            │
+            ▼
+      ┌─────────────────────────────┐
+      │  Step 3: Vault Setup        │  ← User starts here
+      │         │                   │
+      │         ▼                   │
+      │  Step 4: Recovery Phrase    │
+      │         │                   │
+      └─────────┼───────────────────┘
+                │
+                ▼
+          [Home Screen]
 ```
 
-**Key insight:** Social sign-up skips Steps 1 & 2 because Google/Apple already provide the user's identity. The `extra: 2` parameter passed via `context.push(AppRoutes.signUp, extra: 2)` tells the sign-up screen to start at step index 2.
+**Key insight:** Social auth on the login screen serves both sign-in and sign-up. The Firestore user doc existence determines the routing. New users skip Steps 1 & 2 (Google/Apple already provides identity) and go straight to vault setup. The `extra: 2` parameter passed via `context.push(AppRoutes.signUp, extra: 2)` tells the sign-up screen to start at step index 2.
 
 ### Flow 3: Email Sign-In
 
@@ -273,27 +276,7 @@ User opens app
 [Home Screen]
 ```
 
-### Flow 4: Social Sign-In (from Login Screen)
-
-```
-[Login or Sign Up]
-      │
-  Tap "Continue with Google" or "Continue with Apple"
-      │
-      ▼
-  Firebase social auth
-      │
-      ▼
-  Create user doc if needed
-      │
-      ▼
-[Vault Unlock Screen]
-      │
-      ▼
-[Home Screen]
-```
-
-### Flow 5: Password Reset
+### Flow 4: Password Reset
 
 ```
 [Sign In Screen]
@@ -317,7 +300,7 @@ User opens app
 
 **Note:** Firebase handles password reset via email link, not OTP. The OTP screen (`forgot_password_otp_screen.dart`) and new password screen exist in the codebase as UI placeholders for a future custom implementation.
 
-### Flow 6: Returning User (Already Logged In)
+### Flow 5: Returning User (Already Logged In)
 
 ```
 User opens app (was previously signed in)
@@ -395,27 +378,44 @@ User taps "Continue with Google"
 ├─ 4. authStateProvider updates (same as email flow above)
 │
 ├─ 5. Screen calls:
-│     ref.read(userRepositoryProvider).createUserIfNotExists(uid)
+│     ref.read(userRepositoryProvider).getUserData(uid)
 │
-└─ 6. Screen navigates:
-       Login screen → context.go(AppRoutes.vaultUnlock)
-       Sign-up screen → context.push(AppRoutes.signUp, extra: 2)
+├─ 6. Branch based on user doc existence:
+│     │
+│     ├─ userData != null (returning user):
+│     │   → context.go(AppRoutes.vaultUnlock)
+│     │
+│     └─ userData == null (new user):
+│         → ref.read(userRepositoryProvider).createUserIfNotExists(uid)
+│         → context.push(AppRoutes.signUp, extra: 2)  (vault setup steps 3 & 4)
 ```
 
 ### What Happens When the Router Redirects
 
 ```
 Any navigation event (context.go, context.push, etc.)
+  — OR —
+Auth state changes (refreshListenable fires)
 │
 ├─ Router's redirect callback fires
 │
-├─ Reads: authState.valueOrNull
+├─ Reads: ref.read(authStateProvider).valueOrNull
 │   │
 │   ├─ User is logged in (non-null):
 │   │   │
-│   │   ├─ Current path is a public route (login, signup, etc.)?
+│   │   ├─ Current path is /  (splash)?
+│   │   │   → Allow (splash handles its own navigation)
+│   │   │
+│   │   ├─ Current path is /dev  (dev menu)?
+│   │   │   → Allow (debug tool)
+│   │   │
+│   │   ├─ Current path is /login-or-signup  or /sign-up?
+│   │   │   → Allow (these screens handle their own post-auth
+│   │   │     navigation — social sign-in users are authenticated
+│   │   │     but still need to complete the sign-up flow)
+│   │   │
+│   │   ├─ Current path is another public route?
 │   │   │   YES → Redirect to /vault/unlock
-│   │   │   (except: splash is always allowed, dev menu in debug mode)
 │   │   │
 │   │   └─ Current path is a protected route?
 │   │       → Allow (no redirect)
@@ -444,16 +444,72 @@ Firebase Auth state change (sign in, sign out, token refresh)
 ├─ 3. currentUserProvider re-evaluates
 │     → ref.watch(authStateProvider).valueOrNull returns new User?
 │
-├─ 4. appRouterProvider re-evaluates (because it watches authStateProvider)
-│     → Creates new GoRouter with updated redirect logic
+├─ 4. ref.listen callback in appRouterProvider fires
+│     → Calls _RouterRefreshNotifier.notify()
+│     → GoRouter's refreshListenable triggers redirect re-evaluation
+│     → IMPORTANT: GoRouter instance is NOT recreated (stable singleton)
+│     → Current screens remain mounted (no widget tree rebuild)
 │
-├─ 5. DocVaultApp (in app.dart) rebuilds
-│     → ref.watch(appRouterProvider) returns new router
-│     → MaterialApp.router gets new routerConfig
-│
-└─ 6. GoRouter runs redirect logic against current route
+└─ 5. GoRouter runs redirect logic against current route
+       → Uses ref.read(authStateProvider) to get latest auth state
        → May redirect user if their auth state no longer matches current route
 ```
+
+**Why `ref.listen` instead of `ref.watch`?** Using `ref.watch(authStateProvider)` would invalidate `appRouterProvider` on every auth change, creating a brand new `GoRouter` instance. This causes the entire navigation tree to rebuild, unmounting all current screens. Any in-progress async work (e.g., the social sign-in flow checking Firestore for user data) would be interrupted because `mounted` becomes `false`. Using `ref.listen` + `refreshListenable` keeps the GoRouter stable and only re-evaluates redirects.
+
+### The Social Sign-In Race Condition (Bug & Fix)
+
+This section explains a real bug we hit during development and how we fixed it. It's a good case study in understanding how `ref.watch` vs `ref.listen` behaves differently with GoRouter.
+
+#### The Bug
+
+When a **new user** tapped "Continue with Google" on the login screen, they should have been routed to the sign-up flow (steps 3 & 4). Instead, they always ended up at the vault unlock screen — even though the Firestore user doc didn't exist yet.
+
+The logs confirmed the code reached the right place:
+
+```
+[LoginOrSignupScreen] uid: pJb5PNAPTvM6byQe1pEiSq2B3cx2
+[LoginOrSignupScreen] userData: null
+```
+
+But neither the "Returning user" nor "New user" log ever fired, and the user landed at vault unlock.
+
+#### What Was Happening (Timeline)
+
+The router used `ref.watch(authStateProvider)`, which meant **every auth state change recreated the entire GoRouter**:
+
+1. User taps "Continue with Google"
+2. `signInWithGoogle()` succeeds — Firebase now knows the user is logged in
+3. The code starts its next job: checking Firestore for user data (`getUserData(uid)`)
+4. **But at the same time**, Firebase's auth state change fires. `ref.watch` sees this and says: *"Auth changed! Tear down the entire GoRouter and build a new one!"*
+5. Building a new GoRouter means **the entire screen tree gets destroyed and rebuilt**. The `LoginOrSignupScreen` — which was in the middle of checking Firestore — gets **unmounted** (thrown in the trash)
+6. The code hits `if (!mounted) return;` — the screen is gone, so it bails out. The "Returning user" / "New user" logs never fire
+7. The brand new GoRouter starts fresh at the splash screen, splash sees the user is logged in, sends them to vault unlock
+
+It's like being in the middle of reading a letter, and someone **burns down the house and builds a new one**. You can't finish reading the letter because the room you were in no longer exists.
+
+#### The Fix (Two Parts)
+
+**Part 1: Keep GoRouter stable with `ref.listen` + `refreshListenable`**
+
+Changed from `ref.watch` (which recreates GoRouter) to `ref.listen` + `refreshListenable` (which keeps GoRouter stable and only re-evaluates redirects):
+
+| | `ref.watch` | `ref.listen` |
+|---|---|---|
+| **What it does** | Invalidates the provider → entire provider re-runs → new value created | Runs a callback, provider stays untouched |
+| **For GoRouter** | New GoRouter instance → new navigation tree → all screens unmount | Same GoRouter → calls `notify()` → redirect re-evaluates → screens stay mounted |
+| **Analogy** | Burn down the house and rebuild it | Knock on the door |
+| **When `_onSocialSignIn` is mid-flight** | Screen unmounted, `mounted = false`, method bails out | Screen stays alive, method completes normally |
+
+Now when auth state changes, `ref.listen` calls `refreshNotifier.notify()` — this tells GoRouter *"hey, re-check your redirect rules"*. GoRouter re-checks, the screen stays alive, and the Firestore check finishes normally.
+
+**Part 2: Exempt `/login-or-signup` and `/sign-up` from the redirect**
+
+Even after Part 1, there was a second issue. When `context.push(AppRoutes.signUp)` ran, GoRouter checked its redirect for `/sign-up`:
+
+> "Logged in user on a public route? Redirect to vault unlock!"
+
+So even though the code correctly navigated to sign-up, the bouncer immediately kicked the user to vault unlock. The fix: tell the redirect that `/login-or-signup` and `/sign-up` are **exempt** — authenticated users are allowed to be there because they're in the middle of a sign-up flow that handles its own navigation.
 
 ---
 
@@ -466,7 +522,6 @@ Firebase Auth state change (sign in, sign out, token refresh)
 | `/` | SplashScreen | No (exempt from redirects) |
 | `/onboarding` | OnboardingScreen | No |
 | `/login-or-signup` | LoginOrSignupScreen | No |
-| `/sign-up-method` | SignUpMethodScreen | No |
 | `/sign-up` | SignUpScreen | No |
 | `/sign-in` | SignInScreen | No |
 | `/forgot-password/email` | ForgotPasswordEmailScreen | No |
@@ -483,13 +538,22 @@ Firebase Auth state change (sign in, sign out, token refresh)
 
 ```dart
 // In router.dart
+class _RouterRefreshNotifier extends ChangeNotifier {
+  void notify() => notifyListeners();
+}
+
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);  // ← reactive!
+  final refreshNotifier = _RouterRefreshNotifier();
+
+  // Listen (not watch!) so the GoRouter instance stays stable.
+  ref.listen(authStateProvider, (_, _) => refreshNotifier.notify());
+  ref.onDispose(() => refreshNotifier.dispose());
 
   return GoRouter(
     initialLocation: AppRoutes.splash,
+    refreshListenable: refreshNotifier,  // ← re-evaluates redirects on auth change
     redirect: (context, state) {
-      final isLoggedIn = authState.valueOrNull != null;
+      final isLoggedIn = ref.read(authStateProvider).valueOrNull != null;
       // ... redirect logic uses isLoggedIn ...
     },
     routes: [ ... ],
@@ -501,18 +565,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 // In app.dart
 class DocVaultApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
-    final router = ref.watch(appRouterProvider);  // ← rebuilds when auth changes
+    final router = ref.watch(appRouterProvider);  // ← stable, created once
     return MaterialApp.router(routerConfig: router);
   }
 }
 ```
 
 **How it works:**
-1. `appRouterProvider` calls `ref.watch(authStateProvider)` — this creates a dependency
-2. When `authStateProvider` emits a new value (user signs in/out), Riverpod invalidates `appRouterProvider`
-3. `appRouterProvider` rebuilds with a new `GoRouter` that has updated redirect logic
-4. `DocVaultApp` watches `appRouterProvider`, so it also rebuilds with the new router
-5. The new router evaluates redirect logic against the current route
+1. `appRouterProvider` creates one `GoRouter` instance with a `_RouterRefreshNotifier`
+2. `ref.listen(authStateProvider, ...)` fires when auth state changes but does NOT invalidate the provider
+3. The listener calls `refreshNotifier.notify()` → GoRouter's `refreshListenable` triggers
+4. GoRouter re-evaluates its `redirect` callback against the current route
+5. Inside `redirect`, `ref.read(authStateProvider)` reads the latest auth state
+6. The GoRouter instance, navigation stack, and all mounted screens remain stable throughout
+
+**Why not `ref.watch`?** Using `ref.watch` would invalidate the provider on every auth change, creating a brand new `GoRouter`. This rebuilds the entire navigation tree, unmounting all screens. Any in-progress async work (e.g., social sign-in checking Firestore) gets interrupted because `mounted` becomes `false` on the old widget.
 
 ### ShellRoute for Bottom Navigation
 
@@ -717,8 +784,7 @@ class PrimaryButton extends StatelessWidget {
 
 | File | Role |
 |------|------|
-| `lib/features/auth/presentation/login_or_signup_screen.dart` | Entry point: social sign-in buttons + links to sign-in and sign-up |
-| `lib/features/auth/presentation/sign_up_method_screen.dart` | Choose social vs email sign-up |
+| `lib/features/auth/presentation/login_or_signup_screen.dart` | Entry point: social sign-in/sign-up (smart routing for new vs returning users) + links to sign-in and sign-up |
 | `lib/features/auth/presentation/sign_up_screen.dart` | 4-step PageView: profile → account → vault → recovery |
 | `lib/features/auth/presentation/sign_in_screen.dart` | Email/password sign-in + social icon buttons |
 | `lib/features/auth/presentation/forgot_password_email_screen.dart` | Enter email → Firebase sends reset link |
@@ -770,8 +836,9 @@ class PrimaryButton extends StatelessWidget {
                               │
                               ▼
 ┌─ router.dart ───────────────────────────────────────────────────┐
-│  ref.watch(authStateProvider) → redirect logic                   │
+│  ref.listen(authStateProvider) → refreshListenable → redirect    │
 │  Logged in + public route → /vault/unlock                        │
+│    (except /login-or-signup and /sign-up — handle own nav)       │
 │  Logged out + protected route → /login-or-signup                 │
 └──────────────────────────────────────────────────────────────────┘
                               │

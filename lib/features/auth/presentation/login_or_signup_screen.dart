@@ -34,10 +34,29 @@ class _LoginOrSignupScreenState extends ConsumerState<LoginOrSignupScreen> {
       final authRepo = ref.read(authRepositoryProvider);
       final userRepo = ref.read(userRepositoryProvider);
       final uid = authRepo.currentUser!.uid;
-      await userRepo.createUserIfNotExists(uid);
+      final userData = await userRepo.getUserData(uid);
+      log('uid: $uid', name: 'LoginOrSignupScreen');
+      log('userData: $userData', name: 'LoginOrSignupScreen');
 
       if (!mounted) return;
-      context.go(AppRoutes.vaultUnlock);
+
+      if (userData != null) {
+        // Returning user — go to vault unlock.
+        log(
+          'Returning user — going to vault unlock',
+          name: 'LoginOrSignupScreen',
+        );
+        context.go(AppRoutes.vaultUnlock);
+      } else {
+        // New user — create doc, then vault setup (steps 3 & 4).
+        log(
+          'New user — creating user doc and going to sign up',
+          name: 'LoginOrSignupScreen',
+        );
+        await userRepo.createUserIfNotExists(uid);
+        if (!mounted) return;
+        context.push(AppRoutes.signUp, extra: 2);
+      }
     } on FirebaseAuthException catch (e) {
       log(
         'Social sign in FirebaseAuth error: ${e.code}',

@@ -53,13 +53,27 @@ const _publicRoutes = {
   AppRoutes.devMenu,
 };
 
+/// Notifier that triggers GoRouter redirect re-evaluation
+/// without recreating the entire router.
+class _RouterRefreshNotifier extends ChangeNotifier {
+  void notify() => notifyListeners();
+}
+
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
+  final refreshNotifier = _RouterRefreshNotifier();
+
+  // Listen (not watch) so the provider is NOT invalidated —
+  // the GoRouter instance stays stable, only redirects re-run.
+  ref.listen(authStateProvider, (_, _) => refreshNotifier.notify());
+
+  ref.onDispose(() => refreshNotifier.dispose());
 
   return GoRouter(
     initialLocation: AppRoutes.splash,
+    refreshListenable: refreshNotifier,
     redirect: (context, state) {
-      final isLoggedIn = authState.valueOrNull != null;
+      final isLoggedIn =
+          ref.read(authStateProvider).valueOrNull != null;
       final currentPath = state.matchedLocation;
 
       // Never redirect away from splash — it handles its own navigation.
@@ -70,6 +84,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (isLoggedIn && _publicRoutes.contains(currentPath)) {
         // Allow dev menu even when logged in.
         if (currentPath == AppRoutes.devMenu) return null;
+        // LoginOrSignupScreen and SignUpScreen handle their own
+        // post-auth navigation. Social sign-in users are authenticated
+        // but still need to complete the sign-up flow.
+        if (currentPath == AppRoutes.loginOrSignup ||
+            currentPath == AppRoutes.signUp) {
+          return null;
+        }
         return AppRoutes.vaultUnlock;
       }
 

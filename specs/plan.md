@@ -95,17 +95,15 @@ Email, password, phone, passphrase match validators.
 - [x] ### 3.1 Login or Sign Up — `lib/features/auth/presentation/login_or_signup_screen.dart`
 - Illustration placeholder at top
 - "Let's you in" title
-- 3 full-width `SocialButton`s: Google, Facebook, Apple — social sign-in, navigate to vault unlock on success
+- 2 full-width `SocialButton`s: Google, Apple — smart social sign-in:
+  - Authenticate → check if Firestore user doc exists
+  - **Returning user** (doc exists) → vault unlock
+  - **New user** (doc null) → create user doc → sign-up steps 3 & 4 (vault setup + recovery phrase)
 - "or" divider row
 - "Sign in with password" `PrimaryButton` → sign-in screen
-- "Don't have an account? Sign up" link → sign-up method screen
+- "Don't have an account? Sign up" link → sign-up screen (full 4-step flow)
 
-- [x] ### 3.1.1 Sign Up Method Screen — `lib/features/auth/presentation/sign_up_method_screen.dart`
-- Back arrow → pop to login screen
-- "Sign up to DocuVault" title, subtitle
-- 3 full-width `SocialButton`s: Google, Facebook, Apple — navigate to sign-up step 3 (vault setup) via `extra: 2` (2-step flow)
-- "or" divider row
-- "Sign up with email" `PrimaryButton` → sign-up step 1 (full 4-step flow)
+> **Removed:** `sign_up_method_screen.dart` — social sign-up is handled directly on the login screen; email sign-up goes straight to sign-up screen.
 
 - [x] ### 3.2 Sign Up (4-step PageView) — `lib/features/auth/presentation/sign_up_screen.dart`
 - Single `PageView` with 4 steps, `ProgressBar(currentStep, 4)`, accepts `initialStep` param (0 for email, 2 for social)
@@ -198,6 +196,8 @@ Email, password, phone, passphrase match validators.
 - DevMenu gated behind `kDebugMode`
 - Auth guards: unauthenticated → login; authenticated on public routes → vault unlock
 - Splash screen checks `FirebaseAuth.instance.currentUser` and skips to vault unlock if logged in
+- **Router stability fix:** Changed from `ref.watch(authStateProvider)` (which recreated GoRouter on every auth change, unmounting all screens and breaking in-progress async flows) to `ref.listen` + `refreshListenable` pattern. GoRouter instance is now a stable singleton; auth changes only trigger redirect re-evaluation. Added `_RouterRefreshNotifier` (ChangeNotifier) to bridge Riverpod listener to GoRouter's `refreshListenable`.
+- **Redirect exemptions:** `/login-or-signup` and `/sign-up` are excluded from the "authenticated user on public route → vault unlock" redirect. These screens handle their own post-auth navigation (social sign-in users are authenticated via Firebase but still need to complete the sign-up flow before being redirected).
 
 - [x] ### 6.6 Firestore user doc creation on first login
 - `lib/features/auth/data/user_repository.dart`: `createUserIfNotExists()`, `hasVaultSetup()`, `getUserData()`
@@ -207,8 +207,8 @@ Email, password, phone, passphrase match validators.
 - [x] ### 6.7 Wire all screen buttons to real auth calls
 - All screens converted from `StatelessWidget`/`StatefulWidget` to `ConsumerStatefulWidget` for Riverpod access
 - **sign_in_screen.dart**: Email/password sign-in + Google/Apple social sign-in via `authRepositoryProvider`, error display, loading state
-- **login_or_signup_screen.dart**: Google/Apple social sign-in buttons wired, Facebook removed (no Firebase support), snackbar errors
-- **sign_up_method_screen.dart**: Google/Apple social sign-up → `createUserIfNotExists()` → navigate to vault setup (step 3)
+- **login_or_signup_screen.dart**: Google/Apple social sign-in buttons wired, Facebook removed (no Firebase support), snackbar errors. Smart routing: checks Firestore user doc — returning users → vault unlock, new users → create doc → sign-up steps 3 & 4
+- **sign_up_method_screen.dart**: Removed — social sign-up handled on login screen, email sign-up goes directly to sign-up screen
 - **sign_up_screen.dart**: Step 2 calls `signUpWithEmail()` with loading/error in `SignUpAccountStep`; Step 4 calls `createUserIfNotExists()` with loading in `SignUpRecoveryPhraseStep`
 - **sign_up_account_step.dart**: Added `isLoading` and `errorText` params
 - **sign_up_recovery_phrase_step.dart**: Added `isLoading` param
@@ -256,7 +256,7 @@ Email, password, phone, passphrase match validators.
 2. `flutter analyze` passes with no errors
 3. `flutter test` — all widget and unit tests pass
 4. `flutter run -d chrome` / `flutter run -d macos` — app launches, full navigation flow works:
-   - Splash → Onboarding (3 pages, skip works) → Login/SignUp → Sign Up Method → Sign Up flow (email: 4 steps, social: 2 steps) → Home (3 tabs)
+   - Splash → Onboarding (3 pages, skip works) → Login/SignUp → Sign Up flow (email: 4 steps, social: 2 steps) → Home (4 tabs)
    - Sign In → Vault Unlock → Home
    - Forgot Password flow (email → OTP → new password → success)
 5. After Phase 6: Firebase auth actually creates accounts and signs in
