@@ -12,7 +12,7 @@ import 'package:docvault/features/auth/presentation/sign_in_screen.dart';
 import 'package:docvault/features/auth/presentation/forgot_password_email_screen.dart';
 import 'package:docvault/features/auth/presentation/forgot_password_otp_screen.dart';
 import 'package:docvault/features/auth/presentation/forgot_password_new_password_screen.dart';
-import 'package:docvault/features/auth/presentation/vault_unlock_screen.dart';
+import 'package:docvault/features/vault/presentation/vault_unlock_screen.dart';
 import 'package:docvault/features/vault/presentation/vault_check_screen.dart';
 import 'package:docvault/features/home/presentation/home_shell_screen.dart';
 import 'package:docvault/features/home/presentation/documents_placeholder_screen.dart';

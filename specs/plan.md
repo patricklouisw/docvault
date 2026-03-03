@@ -224,15 +224,15 @@ Email, password, phone, passphrase match validators.
 >
 > **Algorithm choices:** XChaCha20-Poly1305 for key wrapping (spec preferred), Argon2id for key derivation (m=65536, t=3, p=1). Embedded BIP39 English word list for 12-word recovery phrases (no external dependency).
 
-- [ ] ### 7.0 Add crypto dependency
+- [x] ### 7.0 Add crypto dependency
 - Add `cryptography: ^2.7.0` to `pubspec.yaml` under dependencies (was listed in Phase 1.1 but never actually added)
 - Run `flutter pub get`
 
-- [ ] ### 7.1 BIP39 word list — `lib/core/constants/bip39_english.dart`
+- [x] ### 7.1 BIP39 word list — `lib/core/constants/bip39_english.dart`
 - Embed standard BIP39 2048-word English word list as `const List<String>`
 - Used by CryptoService to generate 12-word recovery phrases (128 bits entropy → 12 words)
 
-- [ ] ### 7.2 Crypto Service — `lib/core/services/crypto_service.dart`
+- [x] ### 7.2 Crypto Service — `lib/core/services/crypto_service.dart`
 - Pure cryptographic primitives — no Firestore, no state
 - `generateMasterKey()` — 32-byte random key
 - `generateSalt()` — 16-byte random salt
@@ -241,7 +241,7 @@ Email, password, phone, passphrase match validators.
 - `unwrapKey(wrappedKeyBase64, wrappingKey)` — XChaCha20-Poly1305 decrypt → raw key bytes. Throws on auth failure
 - `generateRecoveryPhrase()` — 128 bits entropy → 12 words from BIP39 list
 
-- [ ] ### 7.3 Vault Repository — `lib/features/vault/data/vault_repository.dart`
+- [x] ### 7.3 Vault Repository — `lib/features/vault/data/vault_repository.dart`
 - Orchestration layer connecting CryptoService with Firestore
 - `setupVault(uid, passphrase)`:
   1. Generate MK (32B) + passphrase salt (16B)
@@ -278,11 +278,11 @@ Email, password, phone, passphrase match validators.
   }
   ```
 
-- [ ] ### 7.4 Update UserRepository — `lib/features/auth/data/user_repository.dart`
+- [x] ### 7.4 Update UserRepository — `lib/features/auth/data/user_repository.dart`
 - Add `getCryptoMetadata(uid)` method — fetches `crypto` field from user doc (used by VaultRepository for unlock)
 - Existing `hasVaultSetup()` already checks for `crypto` field — no changes needed there
 
-- [ ] ### 7.5 Vault Providers — `lib/features/vault/domain/vault_provider.dart`
+- [x] ### 7.5 Vault Providers — `lib/features/vault/domain/vault_provider.dart`
 - `VaultState` sealed class: `VaultLocked | VaultUnlocked(Uint8List masterKey) | VaultSetupRequired | VaultError(String message)`
 - `VaultNotifier` (StateNotifier):
   - `setup(uid, passphrase)` → calls setupVault(), sets VaultUnlocked, returns recovery phrase
@@ -292,7 +292,7 @@ Email, password, phone, passphrase match validators.
   - `reSetup(uid, newPassphrase)` → re-wraps existing MK with new passphrase + generates new recovery phrase (called after recovery unlock). Only callable when vault is unlocked (MK in memory). Returns new recovery phrase
 - Providers: `cryptoServiceProvider`, `vaultRepositoryProvider`, `vaultProvider`
 
-- [ ] ### 7.6 VaultCheckScreen + router updates
+- [x] ### 7.6 VaultCheckScreen + router updates
 - **New file:** `lib/features/vault/presentation/vault_check_screen.dart`
   - Loading spinner, calls `userRepo.hasVaultSetup(uid)`
   - If true → `context.go('/vault/unlock')`
@@ -302,13 +302,13 @@ Email, password, phone, passphrase match validators.
   - Add route for `/vault/check` → `VaultCheckScreen`
   - Change redirect target from `AppRoutes.vaultUnlock` to `AppRoutes.vaultCheck` (line 94)
 
-- [ ] ### 7.7 Update navigation across screens
+- [x] ### 7.7 Update navigation across screens
 - Replace `context.go(AppRoutes.vaultUnlock)` → `context.go(AppRoutes.vaultCheck)` in:
   - `splash_screen.dart` (line 30) — authenticated user on splash
   - `sign_in_screen.dart` (lines 51, 85) — after email/social sign-in
   - `login_or_signup_screen.dart` (line 49) — returning social user
 
-- [ ] ### 7.8 Wire sign-up steps 3–4 to real crypto
+- [x] ### 7.8 Wire sign-up steps 3–4 to real crypto
 - **`sign_up_screen.dart`:**
   - Move `createUserIfNotExists()` from `_onStep4Continue()` to `_onStep2Continue()` (user doc must exist before crypto write)
   - Add `_isRecoveryReSetup` getter — checks if `vaultProvider` state is `VaultUnlocked` (MK already in memory from recovery unlock)
@@ -321,7 +321,7 @@ Email, password, phone, passphrase match validators.
 - **`sign_up_vault_setup_step.dart`:** Add `isLoading` and `errorText` params (matching `SignUpAccountStep` pattern)
 - **`sign_up_recovery_phrase_step.dart`:** Add required `recoveryPhrase` param, remove hardcoded `_placeholderPhrase`, update clipboard copy
 
-- [ ] ### 7.9 Wire vault unlock screen — `vault_unlock_screen.dart`
+- [x] ### 7.9 Wire vault unlock screen — `vault_unlock_screen.dart`
 - Convert from `StatefulWidget` to `ConsumerStatefulWidget`
 - Add `_isLoading` state, loading indicator on PrimaryButton
 - Make `_onUnlock()` async:
@@ -329,7 +329,7 @@ Email, password, phone, passphrase match validators.
   - Recovery mode: `vaultNotifier.unlockWithRecovery(uid, phrase)` → on success → `context.go(AppRoutes.signUp, extra: 2)` (redirects to steps 3-4 for mandatory passphrase re-setup + new recovery phrase)
   - On `SecretBoxAuthenticationError` → show "Incorrect passphrase" / "Incorrect recovery phrase"
 
-- [ ] ### 7.10 Logout — clear MK from memory
+- [x] ### 7.10 Logout — clear MK from memory
 - **`profile_screen.dart`:** Update `_onLogOut()` to call `ref.read(vaultProvider.notifier).lock()` before `authRepository.signOut()`
 - `lock()` zeros MK bytes and sets VaultLocked state
 
