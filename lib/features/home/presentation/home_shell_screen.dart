@@ -16,6 +16,27 @@ class HomeShellScreen extends StatelessWidget {
     AppRoutes.profile,
   ];
 
+  static const _tabLabels = [
+    AppStrings.documents,
+    AppStrings.packages,
+    AppStrings.templates,
+    AppStrings.profile,
+  ];
+
+  static const _tabIcons = [
+    Icons.folder_outlined,
+    Icons.inventory_2_outlined,
+    Icons.description_outlined,
+    Icons.person_outline,
+  ];
+
+  static const _tabSelectedIcons = [
+    Icons.folder,
+    Icons.inventory_2,
+    Icons.description,
+    Icons.person,
+  ];
+
   int _currentIndex(BuildContext context) {
     final location =
         GoRouterState.of(context).uri.toString();
@@ -28,37 +49,45 @@ class HomeShellScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentIndex = _currentIndex(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      body: child,
-      bottomNavigationBar: NavigationBar(
+      appBar: AppBar(
+        title: Text(_tabLabels[currentIndex]),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+      ),
+      drawer: NavigationDrawer(
         selectedIndex: currentIndex,
         onDestinationSelected: (index) {
+          Navigator.of(context).pop();
           context.go(_tabs[index]);
         },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.folder_outlined),
-            selectedIcon: Icon(Icons.folder),
-            label: AppStrings.documents,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(28, 16, 16, 8),
+            child: Text(
+              AppStrings.appName,
+              style: textTheme.titleSmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
           ),
-          NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2),
-            label: AppStrings.packages,
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.description_outlined),
-            selectedIcon: Icon(Icons.description),
-            label: AppStrings.templates,
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: AppStrings.profile,
-          ),
+          const Divider(indent: 28, endIndent: 28),
+          for (var i = 0; i < _tabs.length; i++)
+            NavigationDrawerDestination(
+              icon: Icon(_tabIcons[i]),
+              selectedIcon: Icon(_tabSelectedIcons[i]),
+              label: Text(_tabLabels[i]),
+            ),
         ],
       ),
+      body: child,
     );
   }
 }
